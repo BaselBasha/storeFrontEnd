@@ -1,0 +1,5 @@
+.ant-form-item-control-input-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
