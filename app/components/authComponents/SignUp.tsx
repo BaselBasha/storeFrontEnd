@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Form, Input, Button, Select, DatePicker, Spin } from "antd";
 import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
 import moment from "moment";
-import OtpVerification from "./OTP/OTPverifivation"; // Import your OTP component
+import OtpVerification from "../OTP/OTPverifivation"; // Import your OTP component
 import { ToastContainer, toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import Link from "next/link";

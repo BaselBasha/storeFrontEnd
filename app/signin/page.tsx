@@ -1,9 +1,9 @@
 "use client";
 import React, { Suspense, lazy } from "react";
 import { Spin } from "antd";
-import Signin  from '../components/Signin'
+import Signin  from '../components/authComponents/Signin'
 import { AuroraBackground } from "../components/backgrounds/background";
-const SignUpForm = lazy(() => import("../components/SignUp"));
+const SignUpForm = lazy(() => import("../components/authComponents/SignUp"));
 export default function Home() {
   return (
     <Suspense

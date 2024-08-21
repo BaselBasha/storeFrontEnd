@@ -2,7 +2,7 @@
 import React, { Suspense, lazy } from "react";
 import { Spin } from "antd";
 import { AuroraBackground } from "../components/backgrounds/background";
-const ForgotPassword = lazy(() => import("../components/forgot-password"));
+const ForgotPassword = lazy(() => import("../components/authComponents/forgot-password"));
 export default function Home() {
   return (
     <Suspense
