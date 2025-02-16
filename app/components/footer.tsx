@@ -8,20 +8,21 @@ import {
   faTiktok,
   faTwitch,
 } from '@fortawesome/free-brands-svg-icons';
+import ContactForm from './contactForm';
 import { Oxanium, Bebas_Neue, Rajdhani } from 'next/font/google';
 
 // Configure the fonts
 const oxanium = Oxanium({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'], // Include multiple weights for flexibility
+  weight: ['400', '500', '600', '700'],
 });
 const bebasNeue = Bebas_Neue({
   subsets: ['latin'],
-  weight: '400', // Bebas Neue only has one weight (400)
+  weight: '400',
 });
 const rajdhani = Rajdhani({
   subsets: ['latin'],
-  weight: ['400', '500', '600'], // Include multiple weights for flexibility
+  weight: ['400', '500', '600'],
 });
 
 const Footer: React.FC = () => {
@@ -36,124 +37,130 @@ const Footer: React.FC = () => {
           <p className="text-sm mt-2">Dive into the Depths of Gaming</p>
         </div>
 
-        {/* Navigation Links */}
-        <div className="flex flex-wrap justify-center md:justify-start gap-16 mb-12 w-full">
-          {/* Explore Column */}
-          <div className="text-center md:text-left w-full md:w-auto">
-            <h3 className={`text-lg font-semibold mb-6 text-[#db3032] ${bebasNeue.className}`}>Explore</h3>
-            <ul className={`space-y-4 ${rajdhani.className}`}>
-              <li>
-                <Link href="/games" className="hover:text-[#db3032] transition-colors">
-                  Games
-                </Link>
-              </li>
-              <li>
-                <Link href="/about" className="hover:text-[#db3032] transition-colors">
-                  About Us
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="hover:text-[#db3032] transition-colors">
-                  Contact
-                </Link>
-              </li>
-            </ul>
+        {/* Footer Content Wrapper */}
+        <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-8 mb-12 w-full">
+          {/* Links Column */}
+          <div className="flex flex-wrap gap-10 w-full md:w-auto">
+            {/* Explore Column */}
+            <div className='text-center md:text-left w-full md:w-auto'>
+              <h3 className={`text-lg font-semibold mb-6 text-[#db3032] ${bebasNeue.className}`}>Explore</h3>
+              <ul className={`space-y-4 ${rajdhani.className}`}>
+                <li>
+                  <Link href="/games" className="hover:text-[#db3032] transition-colors">
+                    Games
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/about" className="hover:text-[#db3032] transition-colors">
+                    About Us
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/contact" className="hover:text-[#db3032] transition-colors">
+                    Contact
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Support Column */}
+            <div className="text-center md:text-left w-full md:w-auto">
+              <h3 className={`text-lg font-semibold mb-6 text-[#db3032] ${bebasNeue.className}`}>Support</h3>
+              <ul className={`space-y-4 ${rajdhani.className}`}>
+                <li>
+                  <Link href="/faq" className="hover:text-[#db3032] transition-colors">
+                    FAQ
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/support" className="hover:text-[#db3032] transition-colors">
+                    Get help
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/terms" className="hover:text-[#db3032] transition-colors">
+                    Ask our AI
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Connect Column */}
+            <div className="text-center md:text-left w-full md:w-auto">
+              <h3 className={`text-lg font-semibold mb-6 text-[#db3032] ${bebasNeue.className}`}>Connect</h3>
+              <ul className={`space-y-4 ${rajdhani.className}`}>
+                <li>
+                  <a
+                    href="https://discord.gg/kraken"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center md:justify-start gap-3 hover:text-[#db3032] transition-colors"
+                  >
+                    <FontAwesomeIcon icon={faDiscord} className="w-5 h-5" />
+                    <span>Discord</span>
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://twitter.com/krakengames"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center md:justify-start gap-3 hover:text-[#db3032] transition-colors"
+                  >
+                    <FontAwesomeIcon icon={faXTwitter} className="w-5 h-5" />
+                    <span>X (Twitter)</span>
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://youtube.com/krakengames"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center md:justify-start gap-3 hover:text-[#db3032] transition-colors"
+                  >
+                    <FontAwesomeIcon icon={faYoutube} className="w-5 h-5" />
+                    <span>YouTube</span>
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://instagram.com/krakengames"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center md:justify-start gap-3 hover:text-[#db3032] transition-colors"
+                  >
+                    <FontAwesomeIcon icon={faInstagram} className="w-5 h-5" />
+                    <span>Instagram</span>
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://tiktok.com/@krakengames"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center md:justify-start gap-3 hover:text-[#db3032] transition-colors"
+                  >
+                    <FontAwesomeIcon icon={faTiktok} className="w-5 h-5" />
+                    <span>TikTok</span>
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://twitch.tv/krakengames"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center md:justify-start gap-3 hover:text-[#db3032] transition-colors"
+                  >
+                    <FontAwesomeIcon icon={faTwitch} className="w-5 h-5" />
+                    <span>Twitch</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
 
-          {/* Support Column */}
-          <div className="text-center md:text-left w-full md:w-auto">
-            <h3 className={`text-lg font-semibold mb-6 text-[#db3032] ${bebasNeue.className}`}>Support</h3>
-            <ul className={`space-y-4 ${rajdhani.className}`}>
-              <li>
-                <Link href="/faq" className="hover:text-[#db3032] transition-colors">
-                  FAQ
-                </Link>
-              </li>
-              <li>
-                <Link href="/support" className="hover:text-[#db3032] transition-colors">
-                  Get help
-                </Link>
-              </li>
-              <li>
-                <Link href="/terms" className="hover:text-[#db3032] transition-colors">
-                  Ask our ai
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Connect Column */}
-          <div className="text-center md:text-left w-full md:w-auto">
-            <h3 className={`text-lg font-semibold mb-6 text-[#db3032] ${bebasNeue.className}`}>Connect</h3>
-            <ul className={`space-y-4 ${rajdhani.className}`}>
-              <li>
-                <a
-                  href="https://discord.gg/kraken"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center md:justify-start gap-3 hover:text-[#db3032] transition-colors"
-                >
-                  <FontAwesomeIcon icon={faDiscord} className="w-5 h-5" />
-                  <span>Discord</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://twitter.com/krakengames"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center md:justify-start gap-3 hover:text-[#db3032] transition-colors"
-                >
-                  <FontAwesomeIcon icon={faXTwitter} className="w-5 h-5" />
-                  <span>X (Twitter)</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://youtube.com/krakengames"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center md:justify-start gap-3 hover:text-[#db3032] transition-colors"
-                >
-                  <FontAwesomeIcon icon={faYoutube} className="w-5 h-5" />
-                  <span>YouTube</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://instagram.com/krakengames"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center md:justify-start gap-3 hover:text-[#db3032] transition-colors"
-                >
-                  <FontAwesomeIcon icon={faInstagram} className="w-5 h-5" />
-                  <span>Instagram</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://tiktok.com/@krakengames"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center md:justify-start gap-3 hover:text-[#db3032] transition-colors"
-                >
-                  <FontAwesomeIcon icon={faTiktok} className="w-5 h-5" />
-                  <span>TikTok</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://twitch.tv/krakengames"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center md:justify-start gap-3 hover:text-[#db3032] transition-colors"
-                >
-                  <FontAwesomeIcon icon={faTwitch} className="w-5 h-5" />
-                  <span>Twitch</span>
-                </a>
-              </li>
-            </ul>
-          </div>
+          {/* Form Section (Align to the Right) */}
+          <ContactForm />
         </div>
 
         {/* Horizontal Line */}

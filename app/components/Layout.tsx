@@ -1,5 +1,6 @@
 import React, { ReactNode } from 'react';
 import Footer from './footer';
+import '@ant-design/v5-patch-for-react-19';
 
 interface LayoutProps {
   children: ReactNode;
