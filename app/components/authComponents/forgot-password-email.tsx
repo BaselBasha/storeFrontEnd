@@ -5,6 +5,7 @@ import { LockOutlined, UserOutlined } from "@ant-design/icons";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Link from "next/link";
+import '@ant-design/v5-patch-for-react-19';
 
 const ForgotPass: React.FC = () => {
   const [loading, setLoading] = useState(false); // State to manage loading spinner

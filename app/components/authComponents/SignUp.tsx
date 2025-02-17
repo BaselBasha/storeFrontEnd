@@ -7,6 +7,7 @@ import OtpVerification from "../OTP/OTPverifivation"; // Import your OTP compone
 import { ToastContainer, toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import Link from "next/link";
+import '@ant-design/v5-patch-for-react-19';
 
 const { Option } = Select;
 

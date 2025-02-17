@@ -7,6 +7,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import '@ant-design/v5-patch-for-react-19';
 
 const ForgotPassword: React.FC = () => {
     const [form] = Form.useForm();

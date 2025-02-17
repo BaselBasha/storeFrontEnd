@@ -3,6 +3,7 @@ import { Form, Input, message, Button, Spin, GetProps } from 'antd';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation'; // Import useRouter from next/navigation
 import './OTP.css';
+import '@ant-design/v5-patch-for-react-19';
 
 interface OtpVerificationProps {
   email: string;
