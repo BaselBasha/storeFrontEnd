@@ -22,11 +22,22 @@ const SignUpForm: React.FC = () => {
                 },
                 body: JSON.stringify(values),
             });
-
+    
             if (response.ok) {
                 const data = await response.json();
-                message.success('Login successful');
-                router.push('/');
+                
+                // Assuming the server returns the token in the 'token' field
+                const token = data.access_token;
+                console.log(token)
+    
+                // Store the token in sessionStorage
+                if (token) {
+                    sessionStorage.setItem('accessToken', token);
+                    message.success('Login successful');
+                    router.push('/');
+                } else {
+                    message.error('No token received from server');
+                }
             } else {
                 if (response.status === 401) {
                     message.error('Incorrect email or password');
