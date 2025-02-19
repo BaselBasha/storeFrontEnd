@@ -12,7 +12,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen flex flex-col">
       
-      <header className="bg-grey-600 text-white">
+      <header className="bg-grey-600 text-white pb-96">
         <Navbar />
       </header>
 
