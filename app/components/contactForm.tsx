@@ -1,8 +1,7 @@
 import { Input, Button, Form, message } from 'antd';
 import HCaptcha from 'react-hcaptcha';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Oxanium, Bebas_Neue, Rajdhani } from 'next/font/google';
-
 const { TextArea } = Input;
 
 // Configure the fonts
@@ -47,7 +46,6 @@ const ContactForm: React.FC = () => {
     const fields = form.getFieldsValue();
     const isEmailValid = form.getFieldError('email').length === 0;
     const isMessageValid = form.getFieldError('message').length === 0;
-
     setIsFormValid(isEmailValid && isMessageValid);
   };
 
@@ -66,7 +64,6 @@ const ContactForm: React.FC = () => {
         <h3 className={`text-2xl font-semibold mb-4 text-[#FF4500] ${bebasNeue.className}`}>
           Get in touch with Kraken!
         </h3>
-
         <Form.Item
           name="email"
           rules={[
@@ -80,7 +77,6 @@ const ContactForm: React.FC = () => {
             style={{ backgroundColor: '#FFFFFF' }}
           />
         </Form.Item>
-
         <Form.Item
           name="message"
           rules={[
@@ -97,15 +93,24 @@ const ContactForm: React.FC = () => {
             style={{ backgroundColor: '#FFFFFF' }}
           />
         </Form.Item>
-
         <div className="mb-4">
-          <HCaptcha
-            sitekey={process.env.REACT_APP_SITE_KEY || 'd58cab32-cf2a-4334-b154-ca48429caf74'}
-            onVerify={handleCaptchaVerify}
-            ref={hcaptchaRef}
-          />
+          {/* Responsive hCaptcha */}
+          <div className="w-full">
+            <HCaptcha
+              sitekey={process.env.REACT_APP_SITE_KEY || 'd58cab32-cf2a-4334-b154-ca48429caf74'}
+              onVerify={handleCaptchaVerify}
+              ref={hcaptchaRef}
+              size="normal" // Default size
+              theme="light"
+              className="w-full"
+              style={{
+                width: '100%', // Force full width
+                maxWidth: '100%',
+                margin: '0 auto', // Center align
+              }}
+            />
+          </div>
         </div>
-
         <Form.Item>
           <Button
             type="primary"
