@@ -1,28 +1,51 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react"; // Add useEffect
 import { Form, Input, Button, Select, DatePicker, Spin } from "antd";
 import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
 import moment from "moment";
-import OtpVerification from "../OTP/OTPverifivation"; // Import your OTP component
+import OtpVerification from "../OTP/OTPverifivation";
 import { ToastContainer, toast } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
+import "react-toastify/dist/ReactToastify.css";
 import Link from "next/link";
-import '@ant-design/v5-patch-for-react-19';
+import { useRouter } from "next/navigation"; // Add useRouter for redirect
+import "@ant-design/v5-patch-for-react-19";
 
 const { Option } = Select;
 
 const SignUpForm: React.FC = () => {
-  const [isSubmitted, setIsSubmitted] = useState<boolean>(false); // State to check if the form is submitted
-  const [loading, setLoading] = useState<boolean>(false); // State to manage loading animation
+  const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true); // Start with loading true to avoid hydration issues
   const [fullName, setFullName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [gender, setGender] = useState<string>("male");
-  const [dob, setDob] = useState<moment.Moment | null>(null); // State for Date of Birth
+  const [dob, setDob] = useState<moment.Moment | null>(null);
+  const router = useRouter(); // Initialize router
+
+  // Check if user is logged in and redirect
+  useEffect(() => {
+    const token = sessionStorage.getItem("accessToken");
+    if (token) {
+      try {
+        const decodedToken = JSON.parse(atob(token.split(".")[1]));
+        const redirectPath = decodedToken.role === "ADMIN" ? "/admin" : "/";
+        toast.info("You must log out to access this page");
+        setTimeout(() => {
+          router.push(redirectPath); // Redirect after 1 second
+        }, 1000);
+      } catch (error) {
+        console.error("Invalid token:", error);
+        sessionStorage.removeItem("accessToken"); // Clear invalid token
+        setLoading(false); // Show the form if token is invalid
+      }
+    } else {
+      setLoading(false); // No token, proceed to render form
+    }
+  }, [router]);
 
   const validateUsername = (rule: any, value: string) => {
-    const usernamePattern = /^[a-zA-Z0-9_]+$/; // Allow only letters, numbers, and underscores
+    const usernamePattern = /^[a-zA-Z0-9_]+$/;
     if (!value || usernamePattern.test(value)) {
       return Promise.resolve();
     }
@@ -33,23 +56,18 @@ const SignUpForm: React.FC = () => {
     if (!value) {
       return Promise.reject("Please select your date of birth");
     }
-
     const today = moment();
     const birthDate = value;
     const age = today.year() - birthDate.year();
-
     const hasHadBirthdayThisYear = today.isSameOrAfter(birthDate.clone().add(age, "years"));
-
     if (age > 18 || (age === 18 && hasHadBirthdayThisYear)) {
       return Promise.resolve();
     }
-
     return Promise.reject("You must be at least 18 years old.");
   };
 
   const handleSubmit = async () => {
-    setLoading(true); // Start the loading animation
-
+    setLoading(true);
     const formData = {
       email,
       password,
@@ -58,7 +76,7 @@ const SignUpForm: React.FC = () => {
       gender,
       birthDate: dob ? dob.format("YYYY-MM-DD") : undefined,
     };
-  
+
     try {
       const response = await fetch("http://localhost:4000/auth/signup", {
         method: "POST",
@@ -66,37 +84,47 @@ const SignUpForm: React.FC = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
-        credentials: 'include',
+        credentials: "include",
       });
-  
+
       if (!response.ok) {
-        // Handle non-2xx HTTP responses
         const errorData = await response.json();
-        if (errorData.message === 'Email is already in use') {
+        if (errorData.message === "Email is already in use") {
           toast.error("Email is already in use. Please try another one.");
-        } else if (errorData.message === 'Username is already in use') {
+        } else if (errorData.message === "Username is already in use") {
           toast.error("Username is already in use. Please try another one.");
         } else {
           toast.error("Server error. Please try again later.");
         }
-        return; // Stop further execution
+        return;
       }
-  
+
       const result = await response.json();
       console.log("Signup successful:", result);
-  
       toast.success("Signup successful! Please check your email for the OTP.");
-      setIsSubmitted(true); // Simulate form submission success
+      setIsSubmitted(true);
     } catch (error: any) {
       console.error("Signup error:", error.message);
       toast.error(error.message || "Something went wrong during signup");
     } finally {
-      setLoading(false); // Stop the loading animation
+      setLoading(false);
     }
   };
-  
+
+  // Show loading state while checking auth or during submission
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen h-screen w-screen">
+        <ToastContainer />
+        <Spin spinning={true}>
+          <div>Loading...</div>
+        </Spin>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex items-center justify-center min-h-screen h-screen w-screen ">
+    <div className="flex items-center justify-center min-h-screen h-screen w-screen">
       <ToastContainer />
       <Spin spinning={loading}>
         {!isSubmitted ? (
@@ -119,7 +147,7 @@ const SignUpForm: React.FC = () => {
                       onChange={(e) => setFullName(e.target.value)}
                     />
                   </Form.Item>
-    
+
                   <Form.Item
                     label="Email"
                     name="email"
@@ -134,7 +162,7 @@ const SignUpForm: React.FC = () => {
                       onChange={(e) => setEmail(e.target.value)}
                     />
                   </Form.Item>
-    
+
                   <Form.Item
                     label="Username"
                     name="username"
@@ -149,7 +177,7 @@ const SignUpForm: React.FC = () => {
                       onChange={(e) => setUsername(e.target.value)}
                     />
                   </Form.Item>
-    
+
                   <Form.Item
                     label="Password"
                     name="password"
@@ -168,7 +196,7 @@ const SignUpForm: React.FC = () => {
                     />
                   </Form.Item>
                 </div>
-    
+
                 <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <Form.Item
                     label="Date of Birth"
@@ -182,7 +210,7 @@ const SignUpForm: React.FC = () => {
                       onChange={(date) => setDob(date)}
                     />
                   </Form.Item>
-    
+
                   <Form.Item
                     label="Gender"
                     name="gender"
@@ -198,7 +226,7 @@ const SignUpForm: React.FC = () => {
                     </Select>
                   </Form.Item>
                 </div>
-    
+
                 <Form.Item>
                   <Button
                     type="primary"
@@ -208,7 +236,7 @@ const SignUpForm: React.FC = () => {
                     Sign up
                   </Button>
                 </Form.Item>
-    
+
                 <div className="flex items-center justify-between mt-4">
                   <span className="w-1/5 border-b dark:border-gray-600 md:w-1/4"></span>
                   <Link
@@ -223,7 +251,7 @@ const SignUpForm: React.FC = () => {
             </Form>
           </div>
         ) : (
-          <OtpVerification email={email} /> // Render the OTP verification component and pass the email as a prop
+          <OtpVerification email={email} />
         )}
       </Spin>
     </div>

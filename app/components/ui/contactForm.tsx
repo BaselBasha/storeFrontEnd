@@ -1,7 +1,10 @@
+'use client';
+
 import { Input, Button, Form, message } from 'antd';
 import HCaptcha from 'react-hcaptcha';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Oxanium, Bebas_Neue, Rajdhani } from 'next/font/google';
+
 const { TextArea } = Input;
 
 // Configure the fonts
@@ -22,32 +25,44 @@ const ContactForm: React.FC = () => {
   const [form] = Form.useForm();
   const [isCaptchaVerified, setIsCaptchaVerified] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
+  const [captchaKey, setCaptchaKey] = useState(0); // Key to force remount if needed
   const hcaptchaRef = useRef<HCaptcha>(null);
 
+  // Cleanup and initialization
+  useEffect(() => {
+    return () => {
+      if (hcaptchaRef.current) {
+        hcaptchaRef.current.resetCaptcha();
+      }
+    };
+  }, []);
+
   // Handle form submission
-  const handleSubmit = (values: any) => {
+  const handleSubmit = useCallback((values: any) => {
     if (isCaptchaVerified && isFormValid) {
       message.success('Message sent successfully!');
       form.resetFields();
       setIsCaptchaVerified(false);
-      hcaptchaRef.current?.resetCaptcha();
+      if (hcaptchaRef.current) {
+        hcaptchaRef.current.resetCaptcha();
+      }
     } else {
       message.error('Please complete the captcha and fill the form correctly.');
     }
-  };
+  }, [form, isCaptchaVerified, isFormValid]);
 
   // Handle hCaptcha verification
-  const handleCaptchaVerify = (token: string) => {
+  const handleCaptchaVerify = useCallback((token: string) => {
     setIsCaptchaVerified(true);
-  };
+  }, []);
 
   // Handle form value changes
-  const handleFormChange = () => {
+  const handleFormChange = useCallback(() => {
     const fields = form.getFieldsValue();
-    const isEmailValid = form.getFieldError('email').length === 0;
-    const isMessageValid = form.getFieldError('message').length === 0;
+    const isEmailValid = form.getFieldError('email').length === 0 && fields.email;
+    const isMessageValid = form.getFieldError('message').length === 0 && fields.message;
     setIsFormValid(isEmailValid && isMessageValid);
-  };
+  }, [form]);
 
   return (
     <div className="w-full md:w-1/3 mt-8 md:mt-0">
@@ -93,23 +108,20 @@ const ContactForm: React.FC = () => {
             style={{ backgroundColor: '#FFFFFF' }}
           />
         </Form.Item>
-        <div className="mb-4">
-          {/* Responsive hCaptcha */}
-          <div className="w-full">
-            <HCaptcha
-              sitekey={process.env.REACT_APP_SITE_KEY || 'd58cab32-cf2a-4334-b154-ca48429caf74'}
-              onVerify={handleCaptchaVerify}
-              ref={hcaptchaRef}
-              size="normal" // Default size
-              theme="light"
-              className="w-full"
-              style={{
-                width: '100%', // Force full width
-                maxWidth: '100%',
-                margin: '0 auto', // Center align
-              }}
-            />
-          </div>
+        <div className="mb-4" key={captchaKey}>
+          <HCaptcha
+            sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || 'd58cab32-cf2a-4334-b154-ca48429caf74'}
+            onVerify={handleCaptchaVerify}
+            ref={hcaptchaRef}
+            {...({ size: 'normal' } as any)} // Type workaround
+            theme="light"
+            className="w-full"
+            style={{
+              width: '100%',
+              maxWidth: '100%',
+              margin: '0 auto',
+            }}
+          />
         </div>
         <Form.Item>
           <Button

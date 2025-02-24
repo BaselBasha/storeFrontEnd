@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import dynamic from 'next/dynamic'; // Add dynamic import
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faDiscord,
@@ -8,8 +9,10 @@ import {
   faTiktok,
   faTwitch,
 } from '@fortawesome/free-brands-svg-icons';
-import ContactForm from './contactForm';
 import { Oxanium, Bebas_Neue, Rajdhani } from 'next/font/google';
+
+// Dynamic import ContactForm with SSR disabled
+const ContactForm = dynamic(() => import('./contactForm'), { ssr: false });
 
 // Configure the fonts
 const oxanium = Oxanium({
@@ -160,7 +163,7 @@ const Footer: React.FC = () => {
           </div>
 
           {/* Form Section (Align to the Right) */}
-          <ContactForm />
+          {/* <ContactForm /> */}
         </div>
 
         {/* Horizontal Line */}
@@ -181,7 +184,7 @@ const Footer: React.FC = () => {
 
         {/* Copyright Section */}
         <div className="text-center md:text-left text-sm mt-6 w-full">
-          <p>&copy; {new Date().getFullYear()} Kraken Game Store. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Kraken Game Store. All rights reserved.</p>
         </div>
       </div>
     </footer>
