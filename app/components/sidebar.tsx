@@ -77,10 +77,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ initialOpen = false }) => {
   ];
 
   const productDropdown = [
-    { label: "Add New Product", href: "/admin/add-product", icon: <IconPlus className="h-4 w-4" /> },
-    { label: "Delete Product", href: "/admin/delete-product", icon: <IconTrash className="h-4 w-4" /> },
-    { label: "Update Product", href: "/admin/update-product", icon: <IconPencil className="h-4 w-4" /> },
-    { label: "Show All Products", href: "/admin/show-products", icon: <IconEye className="h-4 w-4" /> },
+    { label: "Add New Product", href: "/admin/product/add-product", icon: <IconPlus className="h-4 w-4" /> },
+    { label: "Delete Product", href: "/admin/product/delete-product", icon: <IconTrash className="h-4 w-4" /> },
+    { label: "Update Product", href: "/admin/product/update-product", icon: <IconPencil className="h-4 w-4" /> },
+    { label: "Show All Products", href: "/admin/product/all-products", icon: <IconEye className="h-4 w-4" /> },
   ];
 
   // Animation variants for the dropdowns

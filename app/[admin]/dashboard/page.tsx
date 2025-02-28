@@ -1,7 +1,8 @@
-'use client'
+'use client';
+
 import ProtectedAdmin from '@/app/components/ProtectedAdmin';
 import { Sidebar } from '@/app/components/sidebar';
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { Line, Bar } from 'react-chartjs-2';
 import {
@@ -14,7 +15,10 @@ import {
   Title,
   Tooltip,
   Legend,
+  ChartData,
+  ChartOptions,
 } from 'chart.js';
+import Image from 'next/image';
 
 // Register ChartJS components
 ChartJS.register(
@@ -28,8 +32,23 @@ ChartJS.register(
   Legend
 );
 
-// Sample data for different time periods (replace with your actual data)
-const getChartData = (period) => {
+// Define types for chart data structure
+interface ChartDataSet {
+  labels: string[];
+  data: number[];
+}
+
+interface ChartPeriodData {
+  orders: ChartDataSet;
+  users: ChartDataSet;
+  profit: ChartDataSet;
+}
+
+// Type for time period
+type TimePeriod = 'day' | 'week' | 'month' | '3months' | 'year';
+
+// Sample data function with proper typing
+const getChartData = (period: TimePeriod): ChartPeriodData => {
   switch (period) {
     case 'day':
       return {
@@ -107,16 +126,16 @@ const getChartData = (period) => {
         },
       };
     default:
-      return {};
+      return { orders: { labels: [], data: [] }, users: { labels: [], data: [] }, profit: { labels: [], data: [] } };
   }
 };
 
 export default function AdminDashboard() {
-  const [timePeriod, setTimePeriod] = useState('week');
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>('week');
   const chartData = getChartData(timePeriod);
 
-  // Chart configurations
-  const ordersData = {
+  // Chart configurations with proper typing
+  const ordersData: ChartData<'line'> = {
     labels: chartData.orders.labels,
     datasets: [{
       label: 'Orders',
@@ -126,7 +145,7 @@ export default function AdminDashboard() {
     }],
   };
 
-  const profitData = {
+  const profitData: ChartData<'bar'> = {
     labels: chartData.profit.labels,
     datasets: [{
       label: 'Profit ($)',
@@ -135,7 +154,7 @@ export default function AdminDashboard() {
     }],
   };
 
-  const usersData = {
+  const usersData: ChartData<'bar'> = {
     labels: chartData.users.labels,
     datasets: [{
       label: 'New Users',
@@ -144,11 +163,11 @@ export default function AdminDashboard() {
     }],
   };
 
-  const chartOptions = {
+  const chartOptions: ChartOptions<'line' | 'bar'> = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { position: 'top' },
+      legend: { position: 'top' as const },
     },
   };
 
@@ -169,7 +188,7 @@ export default function AdminDashboard() {
                   <select 
                     className="text-sm border rounded p-1"
                     value={timePeriod}
-                    onChange={(e) => setTimePeriod(e.target.value)}
+                    onChange={(e) => setTimePeriod(e.target.value as TimePeriod)}
                   >
                     <option value="day">Day</option>
                     <option value="week">Week</option>
@@ -198,7 +217,15 @@ export default function AdminDashboard() {
                   </thead>
                   <tbody>
                     <tr>
-                      <td><img src="/product1.jpg" alt="Product" className="w-10 h-10 rounded" /></td>
+                      <td>
+                        <Image
+                          src="/product1.jpg"
+                          alt="Product A"
+                          width={40} // w-10 = 40px
+                          height={40} // h-10 = 40px
+                          className="rounded"
+                        />
+                      </td>
                       <td>Product A</td>
                       <td>$29.99</td>
                       <td>150</td>
@@ -229,7 +256,15 @@ export default function AdminDashboard() {
                   </thead>
                   <tbody>
                     <tr>
-                      <td><img src="/us-flag.png" alt="USA" className="w-5 h-5 rounded-full" /></td>
+                      <td>
+                        <Image
+                          src="/us-flag.png"
+                          alt="USA"
+                          width={20} // w-5 = 20px
+                          height={20} // h-5 = 20px
+                          className="rounded-full"
+                        />
+                      </td>
                       <td>USA</td>
                       <td>1,234</td>
                     </tr>
@@ -259,7 +294,15 @@ export default function AdminDashboard() {
                   </thead>
                   <tbody>
                     <tr>
-                      <td><img src="/product2.jpg" alt="Product" className="w-10 h-10 rounded" /></td>
+                      <td>
+                        <Image
+                          src="/product2.jpg"
+                          alt="Product B"
+                          width={40} // w-10 = 40px
+                          height={40} // h-10 = 40px
+                          className="rounded"
+                        />
+                      </td>
                       <td>Product B</td>
                       <td>$19.99</td>
                       <td>0</td>
