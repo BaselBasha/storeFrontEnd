@@ -4,6 +4,9 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import '@ant-design/v5-patch-for-react-19';
 const inter = Inter({ subsets: ["latin"] });
+import { CartProvider } from "@/app/context/CardContext"; // Ensure this is the correct path
+
+
 
 // export const metadata: Metadata = {
 //   title: "Create Next App",
@@ -17,10 +20,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <CartProvider>
       <body className={inter.className}>
         
         {children}
       </body>
+      </CartProvider>
+
     </html>
   );
 }
