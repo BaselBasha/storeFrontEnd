@@ -1,10 +1,11 @@
 'use client';
 
-import { Image } from 'antd';
+import { Image, Skeleton } from 'antd'; // Added Skeleton import
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Card, Typography, Row, Col, message, Button } from 'antd';
-import { ArrowRightOutlined } from '@ant-design/icons';
+import { useRouter } from 'next/navigation';
+import { Card, Typography, Row, Col, message, Button, InputNumber } from 'antd';
+import { ArrowRightOutlined, ShoppingCartOutlined, HeartOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 
@@ -35,6 +36,13 @@ const LaptopList = () => {
   const [laptops, setLaptops] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [isMounted, setIsMounted] = useState<boolean>(false);
+  const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
+  const router = useRouter();
+
+  const isLoggedIn = () => {
+    const token = sessionStorage.getItem('token');
+    return !!token;
+  };
 
   useEffect(() => {
     setIsMounted(true);
@@ -48,6 +56,12 @@ const LaptopList = () => {
           product.category.name.toLowerCase().includes('laptop')
         );
         setLaptops(laptopProducts);
+
+        const initialQuantities = laptopProducts.reduce((acc, product) => {
+          acc[product.id] = 1;
+          return acc;
+        }, {} as { [key: string]: number });
+        setQuantities(initialQuantities);
       } catch (err) {
         message.error(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -60,17 +74,58 @@ const LaptopList = () => {
     return () => setIsMounted(false);
   }, []);
 
+  const handleAddToCart = async (productId: string) => {
+    if (!isLoggedIn()) {
+      message.warning('Please sign in to add items to your cart.');
+      router.push('/signin');
+      return;
+    }
+
+    const quantity = quantities[productId] || 1;
+    const token = sessionStorage.getItem('token');
+
+    try {
+      const response = await fetch('http://localhost:3000/cart/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ productId, quantity }),
+      });
+      if (!response.ok) throw new Error('Failed to add to cart');
+      message.success('Item added to cart successfully!');
+    } catch (err) {
+      message.error(err instanceof Error ? err.message : 'Failed to add to cart');
+    }
+  };
+
+  const handleAddToFavorites = (productId: string) => {
+    if (!isLoggedIn()) {
+      message.warning('Please sign in to add items to your favorites.');
+      router.push('/signin');
+      return;
+    }
+    message.success('Added to favorites!');
+  };
+
+  const handleQuantityChange = (productId: string, value: number | null) => {
+    if (value !== null && value > 0) {
+      setQuantities((prev) => ({ ...prev, [productId]: value }));
+    }
+  };
+
   if (!isMounted) {
     return null;
   }
 
   return (
-    <div className="container mx-auto px-4 py-12 bg-black">
-      <Link href="/pages/laptops">
+    <div className="container mx-auto md:px-36 px-12 py-12">
+      <Link href="/laptops">
         <Title
           level={2}
           style={{
-            color: '#ff4d4f',
+            color: '#1890ff',
             marginBottom: '40px',
             textAlign: 'start',
             fontWeight: 'bold',
@@ -81,24 +136,17 @@ const LaptopList = () => {
       </Link>
 
       {loading ? (
-        <Row gutter={[24, 24]} justify="center">
-          {Array(4)
-            .fill(null)
-            .map((_, index) => (
-              <Col xs={24} sm={12} md={8} lg={6} key={index}>
-                <Card
-                  loading
-                  style={{
-                    background: '#1f1f1f',
-                    borderRadius: '12px',
-                    border: '1px solid #ff4d4f',
-                    width: '100%',
-                    height: '100%',
-                    minHeight: '450px',
-                  }}
-                />
-              </Col>
-            ))}
+        <Row gutter={[16, 16]} justify="center">
+          {Array(4).fill(null).map((_, index) => (
+            <Col xs={24} sm={12} md={8} lg={6} key={index}>
+              <Skeleton
+                active
+                avatar
+                paragraph={{ rows: 4 }}
+                style={{ padding: '16px', background: '#fff', borderRadius: '8px', backgroundColor: '#fff' }}
+              />
+            </Col>
+          ))}
         </Row>
       ) : (
         <Row gutter={[24, 24]} justify="center">
@@ -106,139 +154,73 @@ const LaptopList = () => {
             <Col xs={24} sm={12} md={8} lg={6} key={laptop.id}>
               <Card
                 hoverable
-                style={{
-                  background: '#1f1f1f',
-                  borderRadius: '12px',
-                  border: '1px solid #ff4d4f',
-                  width: '100%',
-                  height: '100%',
-                  minHeight: '450px',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
-                  transition: 'transform 0.3s, box-shadow 0.3s',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                }}
-                styles={{
-                  body: {
-                    padding: '16px',
-                    flexGrow: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                  },
-                }}
+                className="rounded-lg shadow-md relative h-full flex flex-col justify-between"
+                onClick={() => router.push(`/laptops/${laptop.id}`)}
+                style={{ minHeight: 'fit-content' }}
                 cover={
                   laptop.imageUrl ? (
                     <Image
                       src={laptop.imageUrl}
                       alt={laptop.name}
-                      width="100%"
-                      height={220}
-                      style={{
-                        objectFit: 'contain',
-                        borderRadius: '12px 12px 0 0',
-                        backgroundColor: '#ffffff',
-                      }}
-                      preview={true}
+                      height={200}
+                      className="object-cover rounded-t-lg"
+                      preview={false}
+                      onClick={(e) => e.stopPropagation()}
                     />
                   ) : (
-                    <div
-                      style={{
-                        height: 220,
-                        background: '#ffffff',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: '12px 12px 0 0',
-                      }}
-                    >
-                      <Text style={{ color: '#888', fontSize: '16px' }}>
-                        No Image
-                      </Text>
+                    <div className="h-52 bg-gray-200 flex items-center justify-center rounded-t-lg">
+                      <Text type="secondary">No Image Available</Text>
                     </div>
                   )
                 }
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-5px)';
-                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.3)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.2)';
-                }}
               >
-                <div>
+                {/* Favorites Button */}
+                <Button
+                  type="text"
+                  icon={<HeartOutlined className="text-red-500 text-xl" />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAddToFavorites(laptop.id);
+                  }}
+                  className="absolute top-2 right-2 bg-white rounded-full p-2 shadow-md hover:bg-red-100"
+                />
+
+                {/* Card Content */}
+                <div className="flex flex-col justify-between flex-grow">
                   <Card.Meta
                     title={
-                      <Text strong style={{ color: '#fff', fontSize: '18px' }}>
+                      <Text strong className="text-lg text-gray-800 font-semibold">
                         {laptop.name}
                       </Text>
                     }
                     description={
-                      <Text style={{ color: '#bbb', fontSize: '14px' }}>
-                        {laptop.description}
-                      </Text>
+                      <Text className="text-gray-600 text-sm mt-2">{laptop.description}</Text>
                     }
                   />
-                  <div
-                    style={{
-                      marginTop: 16,
-                      color: '#ddd',
-                      fontSize: '14px',
-                      flexGrow: 1,
-                    }}
-                  >
-                    {laptop.specifications?.screenSize && (
-                      <Text style={{ display: 'block', marginBottom: 4, color: 'white' }}>
-                        <strong>Screen Size:</strong> {laptop.specifications.screenSize}
-                      </Text>
-                    )}
-                    {laptop.specifications?.resolution && (
-                      <Text style={{ display: 'block', marginBottom: 4, color: 'white' }}>
-                        <strong>Resolution:</strong> {laptop.specifications.resolution}
-                      </Text>
-                    )}
-                    {laptop.specifications?.processor && (
-                      <Text style={{ display: 'block', marginBottom: 4, color: 'white' }}>
-                        <strong>Processor:</strong> {laptop.specifications.processor}
-                      </Text>
-                    )}
-                    {laptop.specifications?.ram && (
-                      <Text style={{ display: 'block', marginBottom: 4, color: 'white' }}>
-                        <strong>RAM:</strong> {laptop.specifications.ram}
-                      </Text>
-                    )}
-                    {laptop.specifications?.storage && (
-                      <Text style={{ display: 'block', marginBottom: 4, color: 'white' }}>
-                        <strong>Storage:</strong> {laptop.specifications.storage}
-                      </Text>
-                    )}
-                  </div>
-                </div>
-                <div
-                  style={{
-                    marginTop: 20,
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                  }}
-                >
-                  <Text strong style={{ color: '#ff4d4f', fontSize: '22px' }}>
-                    ${laptop.price.toFixed(2)} USD
-                  </Text>
-                  <Link href={`/laptops/${laptop.id}`}>
+
+                  {/* Footer (Quantity Selector + Add to Cart) */}
+                  <div className="flex justify-between items-center mt-3">
+                    <InputNumber
+                      min={1}
+                      max={laptop.stock}
+                      value={quantities[laptop.id]}
+                      onChange={(value) => handleQuantityChange(laptop.id, value)}
+                      size="small"
+                      onClick={(e) => e.stopPropagation()}
+                    />
                     <Button
                       type="primary"
-                      style={{
-                        background: '#ff4d4f',
-                        borderColor: '#ff4d4f',
-                        borderRadius: '6px',
+                      icon={<ShoppingCartOutlined />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddToCart(laptop.id);
                       }}
+                      size="middle"
+                      className="bg-blue-500 border-blue-500 text-white rounded-md"
                     >
-                      View Details
+                      Add to Cart
                     </Button>
-                  </Link>
+                  </div>
                 </div>
               </Card>
             </Col>

@@ -2,8 +2,20 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Card, Typography, Row, Col, message, Button, Image } from 'antd';
-import { ArrowRightOutlined } from '@ant-design/icons';
+import { useRouter } from 'next/navigation';
+import {
+  Card,
+  Typography,
+  Row,
+  Col,
+  message,
+  Button,
+  Image,
+  Skeleton,
+  Space,
+  InputNumber,
+} from 'antd';
+import { ShoppingCartOutlined, HeartOutlined, ArrowRightOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 
@@ -12,27 +24,22 @@ interface Product {
   name: string;
   description: string;
   price: number;
-  category: {
-    name: string;
-  };
-  categoryId: string;
   stock: number;
   imageUrl?: string | null;
-  specifications?: {
-    size?: string;
-    resolution?: string;
-    refreshRate?: string;
-    responseTime?: string;
-    [key: string]: any;
-  } | null;
   createdAt: string;
-  updatedAt: string;
 }
 
 const MonitorList = () => {
   const [monitors, setMonitors] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [isMounted, setIsMounted] = useState<boolean>(false);
+  const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
+  const router = useRouter();
+
+  const isLoggedIn = () => {
+    const token = sessionStorage.getItem('token');
+    return !!token;
+  };
 
   useEffect(() => {
     setIsMounted(true);
@@ -42,13 +49,18 @@ const MonitorList = () => {
         const response = await fetch('http://localhost:4000/products');
         if (!response.ok) throw new Error('Failed to fetch monitors');
         const data: Product[] = await response.json();
-        const monitorProducts = data.filter(
-          (product) =>
-            product.category.name.toLowerCase().includes('monitor') ||
-            product.specifications?.size ||
-            product.specifications?.resolution
+
+        const sortedMonitors = data.sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
-        setMonitors(monitorProducts);
+        const lastFourMonitors = sortedMonitors.slice(0, 4);
+
+        setMonitors(lastFourMonitors);
+        const initialQuantities = lastFourMonitors.reduce((acc, product) => {
+          acc[product.id] = 1;
+          return acc;
+        }, {} as { [key: string]: number });
+        setQuantities(initialQuantities);
       } catch (err) {
         message.error(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -60,172 +72,147 @@ const MonitorList = () => {
     return () => setIsMounted(false);
   }, []);
 
-  if (!isMounted) {
-    return null;
-  }
+  const handleAddToCart = async (productId: string) => {
+    if (!isLoggedIn()) {
+      message.warning('Please sign in to add items to your cart.');
+      router.push('/signin');
+      return;
+    }
+
+    const quantity = quantities[productId] || 1;
+    const token = sessionStorage.getItem('token');
+
+    try {
+      const response = await fetch('http://localhost:3000/cart/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ productId, quantity }),
+      });
+      if (!response.ok) throw new Error('Failed to add to cart');
+      message.success('Item added to cart successfully!');
+    } catch (err) {
+      message.error(err instanceof Error ? err.message : 'Failed to add to cart');
+    }
+  };
+
+  const handleAddToFavorites = (productId: string) => {
+    if (!isLoggedIn()) {
+      message.warning('Please sign in to add items to your favorites.');
+      router.push('/signin');
+      return;
+    }
+    message.success('Added to favorites!');
+  };
+
+  const handleQuantityChange = (productId: string, value: number | null) => {
+    if (value !== null && value > 0) {
+      setQuantities((prev) => ({ ...prev, [productId]: value }));
+    }
+  };
+
+  if (!isMounted) return null;
 
   return (
-    <div className="container mx-auto px-4 py-12 bg-black">
-      <Link href="/pages/monitors">
+    <div className="px-6 md:px-32 lg:px-32 py-10 bg-gray-100">
+      <Link href="/monitors">
         <Title
           level={2}
           style={{
-            color: '#ff4d4f',
+            color: '#1890ff',
             marginBottom: '40px',
             textAlign: 'start',
             fontWeight: 'bold',
           }}
         >
-          Monitors <ArrowRightOutlined />
+          Monitors
+          <ArrowRightOutlined />
         </Title>
       </Link>
 
       {loading ? (
-        <Row gutter={[24, 24]} justify="center">
-          {Array(4)
-            .fill(null)
-            .map((_, index) => (
-              <Col xs={24} sm={12} md={8} lg={6} key={index}>
-                <Card loading style={{ background: '#1f1f1f', borderRadius: '12px', border: '1px solid #ff4d4f', width: '100%', height: '100%', minHeight: '450px' }} />
-              </Col>
-            ))}
+        <Row gutter={[16, 16]} justify="center">
+          {Array(4).fill(null).map((_, index) => (
+            <Col xs={24} sm={12} md={8} lg={6} key={index}>
+              <Skeleton active avatar paragraph={{ rows: 4 }} style={{ padding: '16px', background: '#fff', borderRadius: '8px' }} />
+            </Col>
+          ))}
         </Row>
       ) : (
-        <Row gutter={[24, 24]} justify="center">
+        <Row gutter={[24, 24]} justify="start">
           {monitors.map((monitor) => (
             <Col xs={24} sm={12} md={8} lg={6} key={monitor.id}>
               <Card
                 hoverable
-                style={{
-                  background: '#1f1f1f',
-                  borderRadius: '12px',
-                  border: '1px solid #ff4d4f',
-                  width: '100%',
-                  height: '100%',
-                  minHeight: '450px', // Fixed minimum height for consistency
-                  transition: 'transform 0.3s, box-shadow 0.3s',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  padding: '1px'
-                }}
-                styles={{
-                  body: {
-                    padding: '16px',
-                    flexGrow: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                  },
-                }}
+                className="rounded-lg shadow-md relative h-full flex flex-col justify-between"
+                onClick={() => router.push(`/products/${monitor.id}`)} // Re-added card click navigation
+                style={{ minHeight: 'fit-content' }}
                 cover={
                   monitor.imageUrl ? (
                     <Image
                       src={monitor.imageUrl}
                       alt={monitor.name}
-                      width="100%"
-                      height={220}
-                      style={{
-                        objectFit: 'contain',
-                        borderRadius: '12px 12px 0 0',
-                        backgroundColor: "#ffffff"
-                      }}
-                      preview={true}
+                      height={200}
+                      className="object-cover rounded-t-lg"
+                      preview={false} // Disabled image preview
+                      onClick={(e) => e.stopPropagation()}
                     />
                   ) : (
-                    <div
-                      style={{
-                        height: 220,
-                        background: '#ffffff',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: '12px 12px 0 0',
-                      }}
-                    >
-                      <Text style={{ color: '#888', fontSize: '16px' }}>
-                        No Image
-                      </Text>
+                    <div className="h-52 bg-gray-200 flex items-center justify-center rounded-t-lg">
+                      <Text type="secondary">No Image Available</Text>
                     </div>
                   )
                 }
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.transform = 'translateY(-5px)')
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.transform = 'translateY(0)')
-                }
               >
-                <div>
+                {/* Favorites Button */}
+                <Button
+                  type="text"
+                  icon={<HeartOutlined className="text-red-500 text-xl" />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAddToFavorites(monitor.id);
+                  }}
+                  className="absolute top-2 right-2 bg-white rounded-full p-2 shadow-md hover:bg-red-100"
+                />
+
+                {/* Card Content */}
+                <div className="flex flex-col justify-between flex-grow">
                   <Card.Meta
                     title={
-                      <Text
-                        strong
-                        style={{ color: '#fff', fontSize: '18px' }}
-                      >
+                      <Text strong className="text-lg text-gray-800 font-semibold">
                         {monitor.name}
                       </Text>
                     }
                     description={
-                      <Text style={{ color: '#bbb', fontSize: '14px' }}>
-                        {monitor.description}
-                      </Text>
+                      <Text className="text-gray-600 text-sm mt-2">{monitor.description}</Text>
                     }
                   />
-                  <div
-                    style={{
-                      marginTop: 16,
-                      color: '#ddd',
-                      fontSize: '14px',
-                      flexGrow: 1,
-                    }}
-                  >
-                    {monitor.specifications && (
-                      <>
-                        <Text style={{ display: 'block', marginBottom: 4, color: "white" }}>
-                          <strong>GPU:</strong> {monitor.specifications?.responseTime || 'N/A'}
-                        </Text>
-                        <Text style={{ display: 'block', marginBottom: 4, color: "white" }}>
-                          <strong>RAM:</strong> {monitor.specifications?.size || 'N/A'}
-                        </Text>
-                        <Text style={{ display: 'block', marginBottom: 4, color: "white" }}>
-                          <strong>Storage:</strong>{' '}
-                          {monitor.specifications?.resolution || 'N/A'}
-                        </Text>
-                        <Text style={{ display: 'block', marginBottom: 4, color: "white" }}>
-                          <strong>Power Supply:</strong>{' '}
-                          {monitor.specifications?.refreshRate || 'N/A'}
-                        </Text>
-                      </>
-                    )}
-                  </div>
-                </div>
-                <div
-                  style={{
-                    marginTop: 20,
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                  }}
-                >
-                  <Text
-                    strong
-                    style={{ color: '#ff4d4f', fontSize: '22px' }}
-                  >
-                    ${monitor.price.toFixed(2)}
-                  </Text>
-                  <Link href={`/products/${monitor.id}`}>
+
+                  {/* Footer (Quantity Selector + Add to Cart) */}
+                  <div className="flex justify-between items-center mt-3">
+                    <InputNumber
+                      min={1}
+                      max={monitor.stock}
+                      value={quantities[monitor.id]}
+                      onChange={(value) => handleQuantityChange(monitor.id, value)}
+                      size="small"
+                      onClick={(e) => e.stopPropagation()}
+                    />
                     <Button
                       type="primary"
-                      style={{
-                        background: '#ff4d4f',
-                        borderColor: '#ff4d4f',
-                        borderRadius: '6px',
+                      icon={<ShoppingCartOutlined />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddToCart(monitor.id);
                       }}
+                      size="middle"
+                      className="bg-blue-500 border-blue-500 text-white rounded-md"
                     >
-                      View Details
+                      Add to Cart
                     </Button>
-                  </Link>
+                  </div>
                 </div>
               </Card>
             </Col>
