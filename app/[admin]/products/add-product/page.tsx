@@ -1,6 +1,6 @@
 'use client';
 
-import ProtectedAdmin from '@/app/components/ProtectedAdmin';
+import ProtectedAdmin from '@/app/components/ProtectedAdmin'; // Double-check this path
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from '@/app/components/sidebar';
 import { cn } from '@/lib/utils';
@@ -28,7 +28,7 @@ export default function AddProduct() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [submitting, setSubmitting] = useState<boolean>(false); // Added submitting state
+  const [submitting, setSubmitting] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -57,46 +57,80 @@ export default function AddProduct() {
       return;
     }
 
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      message.error('Invalid image format. Please upload a PNG, JPG, or GIF.');
+      return;
+    }
+
+    // Set the file for upload and create a preview
+    setImageFile(file);
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => {
-      const base64String = reader.result as string;
-      if (!base64String.startsWith('data:image')) {
-        message.error('Invalid image format. Please upload a PNG, JPG, or GIF.');
-        return;
-      }
-
-      setImageFile(file);
-      setImagePreview(base64String);
-      form.setFieldsValue({ imageUrl: base64String });
+      setImagePreview(reader.result as string); // For preview only
     };
     reader.onerror = (error) => {
-      console.error('Error converting image to Base64:', error);
-      message.error('Failed to process image');
+      console.error('Error generating preview:', error);
+      message.error('Failed to process image preview');
     };
   };
 
   const onFinish = async (values: ProductFormValues) => {
-    if (!values.imageUrl || !values.imageUrl.startsWith('data:image')) {
-      message.error('Please upload a valid image');
+    if (!imageFile) {
+      message.error('Please upload an image');
       return;
     }
 
-    const productData = {
-      ...values,
-      imageUrl: values.imageUrl,
-    };
-
-    setSubmitting(true); // Start loading
+    setSubmitting(true);
 
     try {
+      // Step 1: Upload image to Cloudinary via NestJS backend
+      const formData = new FormData();
+      formData.append('image', imageFile);
+
+      const uploadResponse = await fetch('http://localhost:4000/images/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!uploadResponse.ok) {
+        const errorText = await uploadResponse.text();
+        throw new Error(`Image upload failed: ${errorText}`);
+      }
+
+      const uploadData = await uploadResponse.json();
+      const imageUrl = uploadData.url; // Cloudinary URL from backend
+
+      // Step 2: Prepare product data with the Cloudinary URL
+      let specificationsObj = {};
+      if (values.specifications) {
+        try {
+          specificationsObj = JSON.parse(values.specifications);
+        } catch (error) {
+          message.error('Invalid specifications JSON format');
+          setSubmitting(false);
+          return;
+        }
+      }
+
+      const productData = {
+        ...values,
+        specifications: values.specifications ? specificationsObj : undefined,
+        imageUrl: imageUrl, // Use Cloudinary URL instead of Base64
+      };
+
+      // Step 3: Submit product data to backend
       const response = await fetch('http://localhost:4000/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(productData),
       });
 
-      if (!response.ok) throw new Error('Failed to add product');
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to add product: ${errorText}`);
+      }
 
       message.success('Product added successfully!');
       form.resetFields();
@@ -106,7 +140,7 @@ export default function AddProduct() {
       console.error('Error submitting product:', error);
       message.error('Failed to add product');
     } finally {
-      setSubmitting(false); // Stop loading
+      setSubmitting(false);
     }
   };
 
@@ -115,24 +149,23 @@ export default function AddProduct() {
       <div className={cn("flex flex-col md:flex-row h-screen w-full mx-auto")}>
         <Sidebar initialOpen={false} />
         
-        <div className="flex-1 p-6 bg-gray-50 overflow-auto">
+        <div className="flex-1 p-4 bg-gray-50 overflow-auto">
           <div className="max-w-2xl mx-auto">
-            <h1 className="text-2xl font-bold text-gray-900 mb-6">Add Product</h1>
+            <h1 className="text-xl font-bold text-gray-900 mb-4">Add Product</h1>
             
             <Form
               form={form}
               onFinish={onFinish}
               layout="vertical"
-              initialValues={{
-                stock: 0,
-              }}
+              initialValues={{ stock: 0 }}
+              className="space-y-2"
             >
               <Form.Item
                 label="Product Name"
                 name="name"
                 rules={[{ required: true, message: 'Please enter product name' }]}
               >
-                <Input size="large" placeholder="Enter product name" />
+                <Input size="middle" placeholder="Enter product name" />
               </Form.Item>
 
               <Form.Item
@@ -141,7 +174,7 @@ export default function AddProduct() {
                 rules={[{ required: true, message: 'Please enter price' }]}
               >
                 <InputNumber<number>
-                  size="large"
+                  size="middle"
                   min={0}
                   step={0.01}
                   formatter={value => `$ ${value}`}
@@ -155,7 +188,7 @@ export default function AddProduct() {
                 name="description"
                 rules={[{ required: true, message: 'Please enter description' }]}
               >
-                <TextArea rows={4} placeholder="Enter product description" />
+                <TextArea rows={3} placeholder="Enter product description" />
               </Form.Item>
 
               <Form.Item
@@ -164,7 +197,7 @@ export default function AddProduct() {
                 rules={[{ required: true, message: 'Please select a category' }]}
               >
                 <Select
-                  size="large"
+                  size="middle"
                   placeholder="Select category"
                   options={categories}
                 />
@@ -176,7 +209,7 @@ export default function AddProduct() {
                 rules={[{ required: true, message: 'Please enter stock' }]}
               >
                 <InputNumber<number>
-                  size="large"
+                  size="middle"
                   min={0}
                   placeholder="Stock"
                   style={{ width: '100%' }}
@@ -198,10 +231,7 @@ export default function AddProduct() {
                   },
                 }]}
               >
-                <TextArea
-                  rows={4}
-                  placeholder='e.g., {"cpu": "Intel i7", "ram": "16GB"}'
-                />
+                <TextArea rows={3} placeholder='e.g., {"cpu": "Intel i7", "ram": "16GB"}' />
               </Form.Item>
 
               <Form.Item
@@ -209,7 +239,7 @@ export default function AddProduct() {
                 name="imageUrl"
                 rules={[{ required: true, message: 'Please upload an image' }]}
               >
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <input
                     type="file"
                     accept="image/*"
@@ -219,8 +249,8 @@ export default function AddProduct() {
                     <Image
                       src={imagePreview}
                       alt="Uploaded Image"
-                      width={200}
-                      height={200}
+                      width={150}
+                      height={150}
                       style={{ objectFit: 'cover' }}
                     />
                   )}
@@ -232,9 +262,9 @@ export default function AddProduct() {
                 <Button
                   type="primary"
                   htmlType="submit"
-                  size="large"
+                  size="middle"
                   block
-                  loading={submitting} // Show loading spinner on button
+                  loading={submitting}
                   style={{ backgroundColor: '#1890ff', borderColor: '#1890ff' }}
                 >
                   {submitting ? 'Adding Product...' : 'Add Product'}

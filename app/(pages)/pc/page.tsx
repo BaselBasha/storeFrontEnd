@@ -1,357 +1,384 @@
 "use client";
 
-import React, { useState } from "react";
-import Image from "next/image";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Typography, Card, Checkbox, Row, Col, Spin, Empty, Divider, Drawer, Button, Select, message } from "antd";
+import { FilterOutlined, MenuOutlined, ShoppingOutlined, ShoppingCartOutlined } from "@ant-design/icons";
+
+const { Title, Text } = Typography;
+const { Option } = Select;
 
 interface PrebuiltPC {
+  id: string;
   name: string;
-  brand: string;
-  processor: string;
-  ramSize: string;
-  ramType: string;
-  storageType: string;
-  storageSize: string;
-  graphicsCard: string;
+  description: string;
   price: number;
-  discount?: string;
-  sku: string;
-  condition: string;
-  os: string;
- 
+  category: { id: string; name: string };
+  categoryId: string;
+  stock: number;
+  imageUrl?: string;
+  specifications?: Record<string, string>;
+  createdAt: string;
+  updatedAt: string;
 }
-
-const pcData: PrebuiltPC[] = [
-    {
-        name: "Alienware Aurora R15",
-        brand: "Alienware",
-        processor: "Intel Core i9 13900K",
-        ramSize: "32GB",
-        ramType: "DDR5",
-        storageType: "NVMe SSD",
-        storageSize: "2TB",
-        graphicsCard: "NVIDIA RTX 4090",
-        price: 2500,
-        discount: "Originally $2,800",
-        sku: "ALW-AURORA-R15",
-        condition: "New",
-        os: "Windows 11",
-        
-      },
-      {
-        name: "Origin PC EON17-SLX",
-        brand: "Origin PC",
-        processor: "AMD Ryzen 9 7945HX",
-        ramSize: "64GB",
-        ramType: "DDR5",
-        storageType: "NVMe SSD",
-        storageSize: "4TB",
-        graphicsCard: "NVIDIA RTX 4090",
-        price: 3200,
-        sku: "ORIGIN-EON17-SLX",
-        condition: "New",
-        os: "Windows 11",
-        
-      },
-      {
-        name: "Digital Storm Icon",
-        brand: "Digital Storm",
-        processor: "Intel Core i7 13700K",
-        ramSize: "16GB",
-        ramType: "DDR4",
-        storageType: "SSD",
-        storageSize: "1TB",
-        graphicsCard: "NVIDIA RTX 3060",
-        price: 1200,
-        sku: "DS-ICON-2023",
-        condition: "New",
-        os: "Windows 10",
-        
-      },
-      {
-        name: "CyberPowerPC Gamer Supreme",
-        brand: "CyberPowerPC",
-        processor: "AMD Ryzen 7 7800X",
-        ramSize: "16GB",
-        ramType: "DDR4",
-        storageType: "SSD",
-        storageSize: "512GB",
-        graphicsCard: "NVIDIA RTX 3070",
-        price: 1800,
-        sku: "CPP-GS-RTX3070",
-        condition: "New",
-        os: "Windows 11",
-        
-      },
-      {
-        name: "NZXT H5 Flow",
-        brand: "NZXT",
-        processor: "Intel Core i5 13400F",
-        ramSize: "16GB",
-        ramType: "DDR4",
-        storageType: "NVMe SSD",
-        storageSize: "1TB",
-        graphicsCard: "NVIDIA RTX 4070 Ti",
-        price: 2200,
-        sku: "NZXT-H5-Ti",
-        condition: "New",
-        os: "Windows 11",
-       
-      },
-      {
-        name: "Lenovo Legion Tower 5i",
-        brand: "Lenovo",
-        processor: "AMD Ryzen 7 7800",
-        ramSize: "32GB",
-        ramType: "DDR4",
-        storageType: "HDD+SSD",
-        storageSize: "2TB+512GB",
-        graphicsCard: "NVIDIA RTX 4060 Ti",
-        price: 1500,
-        sku: "LENOVO-LEGION-5I",
-        condition: "New",
-        os: "Windows 11",
-       
-      },
-      {
-        name: "HP Omen 30L",
-        brand: "HP",
-        processor: "Intel Core i7 12700",
-        ramSize: "16GB",
-        ramType: "DDR4",
-        storageType: "SSD",
-        storageSize: "512GB",
-        graphicsCard: "NVIDIA RTX 3060",
-        price: 1100,
-        sku: "HP-OMEN-30L",
-        condition: "New",
-        os: "Windows 11",
-       
-      },
-      {
-        name: "Dell Alienware Aurora R13",
-        brand: "Dell",
-        processor: "Intel Core i9 12900K",
-        ramSize: "64GB",
-        ramType: "DDR5",
-        storageType: "NVMe SSD",
-        storageSize: "4TB",
-        graphicsCard: "NVIDIA RTX 3090",
-        price: 2800,
-        discount: "Originally $3,100",
-        sku: "DELL-AURORA-R13",
-        condition: "Refurbished",
-        os: "Windows 10",
-      
-      },
-      {
-        name: "Vexel V271 Basic",
-        brand: "Vexel",
-        processor: "Intel Core i5 12600",
-        ramSize: "8GB",
-        ramType: "DDR4",
-        storageType: "SSD",
-        storageSize: "256GB",
-        graphicsCard: "Integrated GPU",
-        price: 600,
-        sku: "VEX-V271-BASIC",
-        condition: "New",
-        os: "Windows 10",
-       
-      },
-      {
-        name: "Maingear Shift 4.0",
-        brand: "Maingear",
-        processor: "AMD Ryzen 9 7950X",
-        ramSize: "64GB",
-        ramType: "DDR5",
-        storageType: "NVMe SSD",
-        storageSize: "2TB",
-        graphicsCard: "NVIDIA RTX 4080",
-        price: 3000,
-        sku: "MAINGEAR-SHIFT-4",
-        condition: "New",
-        os: "Windows 11",
-      
-      },
-      {
-        name: "System76 Pangolin Pro",
-        brand: "System76",
-        processor: "Intel Core i7 13700",
-        ramSize: "32GB",
-        ramType: "DDR4",
-        storageType: "NVMe SSD",
-        storageSize: "1TB",
-        graphicsCard: "NVIDIA RTX 4060",
-        price: 1300,
-        sku: "SYS76-PANGOLIN-PRO",
-        condition: "New",
-        os: "Pop!_OS",
-       
-      },
-      {
-        name: "Puget Systems Velocity",
-        brand: "Puget Systems",
-        processor: "AMD Ryzen 9 7900",
-        ramSize: "64GB",
-        ramType: "DDR5",
-        storageType: "NVMe SSD",
-        storageSize: "4TB",
-        graphicsCard: "NVIDIA RTX 4070",
-        price: 2000,
-        sku: "PUGET-VELOCITY",
-        condition: "New",
-        os: "Windows 11",
-      
-      },
-      {
-        name: "Falcon Northwest Talon",
-        brand: "Falcon Northwest",
-        processor: "Intel Core i9 13900K",
-        ramSize: "32GB",
-        ramType: "DDR5",
-        storageType: "NVMe SSD",
-        storageSize: "2TB",
-        graphicsCard: "NVIDIA RTX 4080",
-        price: 2900,
-        sku: "FALCON-TALON",
-        condition: "New",
-        os: "Windows 11",
-       
-      },
-      {
-        name: "Velocity Micro Edge",
-        brand: "Velocity Micro",
-        processor: "AMD Ryzen 7 5800G",
-        ramSize: "16GB",
-        ramType: "DDR4",
-        storageType: "SSD",
-        storageSize: "512GB",
-        graphicsCard: "NVIDIA RTX 3070",
-        price: 1700,
-        sku: "VM-EDGE-RTX3070",
-        condition: "New",
-        os: "Windows 10",
-       
-      },
-      {
-        name: "MSI Modern MD34",
-        brand: "MSI",
-        processor: "Intel Core i5 12400",
-        ramSize: "8GB",
-        ramType: "DDR4",
-        storageType: "SSD",
-        storageSize: "512GB",
-        graphicsCard: "Integrated GPU",
-        price: 900,
-        sku: "MSI-MODERN-MD34",
-        condition: "New",
-        os: "Windows 11",
-      
-      }
-];
-
-const categories: Record<string, string[]> = {
-  brand: ["Alienware", "Origin PC", "Digital Storm", "CyberPowerPC", "Vexel", "NZXT", "System76", "Puget Systems", "Velocity Micro", "Falcon Northwest", "Maingear", "HP Omen", "Lenovo Legion", "MSI Modern"],
-  processor: ["Intel Core i5", "Intel Core i7", "Intel Core i9", "AMD Ryzen 5", "AMD Ryzen 7", "AMD Ryzen 9"],
-  ramType: ["DDR4", "DDR5"],
-  ramSize: ["8GB", "16GB", "32GB", "64GB"],
-  storageType: ["HDD", "SSD", "NVMe"],
-  storageSize: ["256GB", "512GB", "1TB", "2TB", "4TB"],
-  graphicsCard: ["RTX 3060", "RTX 3070", "RTX 4060", "RTX 4060 Ti", "RTX 4070", "RTX 4070 Ti", "RTX 4080", "RTX 4090", "GTX 1660 Ti", "Integrated GPU"],
-  os: ["Windows 10", "Windows 11", "Linux"],
-  condition: ["New", "Refurbished"],
-  priceRange: ["Under $500", "$500-$1000", "$1000-$1500", "$1500-$2000", "Over $2000"]
-};
-
-const priceRangeOptions: Record<string, { min: number; max: number }> = {
-  "Under $500": { min: 0, max: 500 },
-  "$500-$1000": { min: 500, max: 1000 },
-  "$1000-$1500": { min: 1000, max: 1500 },
-  "$1500-$2000": { min: 1500, max: 2000 },
-  "Over $2000": { min: 2000, max: Infinity }
-};
 
 const Page: React.FC = () => {
   const [filters, setFilters] = useState<Record<string, string[]>>({});
+  const [pcs, setPcs] = useState<PrebuiltPC[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [dynamicCategories, setDynamicCategories] = useState<Record<string, string[]>>({});
+  const [drawerVisible, setDrawerVisible] = useState(false);
+  const router = useRouter();
 
-  const handleFilterChange = (category: string, value: string) => {
+  useEffect(() => {
+    const fetchPrebuiltPCs = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch("http://localhost:4000/categories/Pc");
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+        const data: PrebuiltPC[] = await response.json();
+        console.log("Fetched Data:", data);
+
+        const specKeys = {
+          cpu: "CPU",
+          gpu: "GPU",
+          ram: "RAM",
+          nvme: "NVMe M.2",
+          nvmeSize: "NVMe Size",
+          hdd: "HDD",
+          hddSize: "HDD Size",
+        };
+
+        const categories: Record<string, Set<string>> = {
+          category: new Set(["Gaming", "Workstation", "Budget"]),
+          priceRange: new Set(["Under $500", "$500-$1000", "$1000-$1500", "$1500-$2000", "Over $2000"]),
+          cpu: new Set(["i3", "i5", "i7", "i9"]),
+          gpu: new Set([
+            "GTX 1050 Ti",
+            "GTX 1660",
+            "RTX 2060",
+            "RTX 3060",
+            "RTX 3070",
+            "RTX 3080",
+            "RTX 3090",
+            "RTX 4060",
+            "RTX 4070",
+            "RTX 4080",
+            "RX 580",
+            "RX 6600",
+            "RX 6700 XT",
+            "RX 6800",
+            "RX 7900 XT",
+          ]),
+          ram: new Set(["8GB", "16GB", "32GB", "64GB"]),
+          nvme: new Set(["Yes", "No"]),
+          nvmeSize: new Set(["256GB", "512GB", "1TB", "2TB"]),
+          hdd: new Set(["Yes", "No"]),
+          hddSize: new Set(["500GB", "1TB", "2TB", "4TB"]),
+        };
+
+        data.forEach((pc) => {
+          categories.category.add(pc.category?.name || "Unknown");
+          if (pc.specifications) {
+            Object.entries(pc.specifications).forEach(([key, value]) => {
+              const normalizedKey = key.toLowerCase();
+              if (normalizedKey in specKeys && value && normalizedKey !== "cpu") {
+                categories[normalizedKey].add(value);
+              }
+            });
+          }
+        });
+
+        setDynamicCategories(
+          Object.fromEntries(
+            Object.entries(categories).map(([key, value]) => [
+              key,
+              Array.from(value).sort(),
+            ])
+          )
+        );
+        setPcs(data);
+      } catch (err) {
+        setError((err as Error).message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPrebuiltPCs();
+  }, []);
+
+  const priceRangeOptions: Record<string, { min: number; max: number }> = {
+    "Under $500": { min: 0, max: 500 },
+    "$500-$1000": { min: 500, max: 1000 },
+    "$1000-$1500": { min: 1000, max: 1500 },
+    "$1500-$2000": { min: 1500, max: 2000 },
+    "Over $2000": { min: 2000, max: Infinity },
+  };
+
+  const handleFilterChange = (category: string, value: string | string[]) => {
     setFilters((prev) => {
       const updated = { ...prev };
-      const currentValues = updated[category] || [];
-      const newValue = currentValues.includes(value)
-        ? currentValues.filter(v => v !== value)
-        : [...currentValues, value];
-      return { ...updated, [category]: newValue };
+      if (category === "gpu") {
+        updated[category] = value ? [value as string] : [];
+      } else {
+        const currentValues = updated[category] || [];
+        updated[category] = Array.isArray(value)
+          ? value
+          : currentValues.includes(value as string)
+          ? currentValues.filter((v) => v !== value)
+          : [...currentValues, value as string];
+      }
+      return updated;
     });
   };
 
-  const filteredPCs = pcData.filter((pc) => {
+  const filteredPCs = pcs.filter((pc) => {
     const categoryMatch = Object.entries(filters).every(([category, values]) => {
       if (!values.length) return true;
-      const pcValue = pc[category as keyof PrebuiltPC];
-      return values.some(v => v === pcValue);
+      if (category === "priceRange") return true;
+      if (category === "category") {
+        return values.some((v) => v === pc.category?.name);
+      }
+      if (pc.specifications && category in pc.specifications) {
+        const pcValue = pc.specifications[category];
+        if (category === "cpu") {
+          return values.some((v) => pcValue?.toLowerCase().startsWith(v.toLowerCase()));
+        }
+        return values.some((v) => v === pcValue);
+      }
+      return false;
     });
 
     const priceMatch = filters.priceRange?.length
-      ? filters.priceRange.some(rangeLabel => {
+      ? filters.priceRange.some((rangeLabel) => {
           const { min, max } = priceRangeOptions[rangeLabel];
-          return pc.price >= min && pc.price <= max;
+          return pc.price && pc.price >= min && pc.price <= max;
         })
       : true;
 
     return categoryMatch && priceMatch;
   });
 
-  return (
-    <div className="flex">
-      <div className="w-64 bg-gray-900 text-white p-4 border-r border-red-500">
-        <h2 className="text-xl font-bold text-red-500 mb-4">Filters</h2>
-        {Object.entries(categories).map(([category, options]) => (
-          <div key={category} className="mb-4">
-            <h3 className="text-lg font-semibold mb-2 capitalize">{category.replace(/([A-Z])/g, " $1")}</h3>
-            {options.map(option => (
-              <label key={option} className="flex items-center space-x-2 cursor-pointer text-sm">
-                <input
-                  type="checkbox"
-                  checked={filters[category]?.includes(option) || false}
-                  onChange={() => handleFilterChange(category, option)}
-                  className="form-checkbox text-red-500"
-                />
-                <span>{option}</span>
-              </label>
-            ))}
-          </div>
-        ))}
-      </div>
-      <div className="flex-1 p-4">
-        <h2 className="text-2xl font-bold text-red-500 mb-4">Prebuilt PCs</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {filteredPCs.map(pc => (
-            <div 
-              key={pc.sku}
-              className="bg-black shadow-md rounded-lg border border-gray-200 overflow-hidden"
+  const renderFilters = () => (
+    <>
+      {Object.entries(dynamicCategories).map(([category, options]) => (
+        <div key={category} style={{ marginBottom: 16 }}>
+          <Text strong style={{ textTransform: "capitalize", display: "block", marginBottom: 8 }}>
+            {category === "category"
+              ? "Category"
+              : category === "priceRange"
+              ? "Price Range"
+              : category === "cpu"
+              ? "CPU"
+              : category === "gpu"
+              ? "GPU"
+              : category === "ram"
+              ? "RAM"
+              : category === "nvme"
+              ? "NVMe M.2"
+              : category === "nvmeSize"
+              ? "NVMe Size"
+              : category === "hdd"
+              ? "HDD"
+              : category === "hddSize"
+              ? "HDD Size"
+              : category.replace(/([A-Z])/g, " $1")}
+          </Text>
+          {category === "gpu" ? (
+            <Select
+              style={{ width: "100%" }}
+              placeholder="Select GPU"
+              allowClear
+              value={filters[category]?.[0] || undefined}
+              onChange={(value) => handleFilterChange(category, value)}
             >
-             
-              <div className="p-4">
-                <h3 className="text-lg font-semibold mb-2 ">{pc.name}</h3>
-                <p className="text-gray-400 mb-1">Processor: {pc.processor}</p>
-                <p className="text-gray-400 mb-1">RAM: {pc.ramSize} {pc.ramType}</p>
-                <p className="text-gray-400 mb-1">Storage: {pc.storageType} {pc.storageSize}</p>
-                <p className="text-gray-400 mb-2">GPU: {pc.graphicsCard}</p>
-                <p className="text-red-500 font-bold text-lg mb-1">${pc.price.toFixed(2)}</p>
-                {pc.discount && (
-                  <p className="text-gray-500 line-through mb-2">{pc.discount}</p>
-                )}
-                <div className="flex items-center space-x-2 text-sm">
-                  <span className="bg-gray-700 px-2 py-1 rounded">{pc.os}</span>
-                  <span className="bg-gray-700 px-2 py-1 rounded">{pc.condition}</span>
-                </div>
-              </div>
-            </div>
-          ))}
+              {options.map((option) => (
+                <Option key={option} value={option}>
+                  {option}
+                </Option>
+              ))}
+            </Select>
+          ) : (
+            <Checkbox.Group
+              options={options.map((option) => ({ label: option, value: option }))}
+              value={filters[category] || []}
+              onChange={(checkedValues) => handleFilterChange(category, checkedValues)}
+            />
+          )}
+          <Divider style={{ margin: "12px 0" }} />
         </div>
-      </div>
-    </div>
+      ))}
+    </>
+  );
+
+  const handleCardClick = (id: string) => {
+    router.push(`/products/${id}`);
+  };
+
+  const addToCart = async (pc: PrebuiltPC) => {
+    const token = sessionStorage.getItem("accessToken");
+    if (!token) {
+      message.error("Please log in to add items to your cart");
+      router.push("/login");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:4000/cart/add", { // Changed to 4000
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ productId: pc.id, quantity: 1, userToken: token }),
+      });
+
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        console.error("Non-JSON response:", text);
+        throw new Error("Server returned non-JSON response");
+      }
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to add to cart");
+      }
+      message.success(`${pc.name} added to cart`);
+    } catch (err) {
+      console.error("Add to cart error:", err);
+      message.error(`Error adding to cart: ${(err as Error).message}`);
+    }
+  };
+
+  const handleBuyNow = async (pc: PrebuiltPC) => {
+    await addToCart(pc);
+    router.push("/cart");
+  };
+
+  return (
+    <Row gutter={16} style={{ padding: 24, background: "#f0f2f5", minHeight: "100vh" }}>
+      {/* Desktop Filter Sidebar (Thinner) */}
+      <Col xs={0} md={4}>
+        <Card
+          title={
+            <Title level={4} style={{ margin: 0 }}>
+              <FilterOutlined /> Filters
+            </Title>
+          }
+          style={{ background: "#fff", borderRadius: 8, boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
+        >
+          {renderFilters()}
+        </Card>
+      </Col>
+
+      {/* Mobile Filter Drawer */}
+      <Col xs={24} md={0}>
+        <Button
+          icon={<MenuOutlined />}
+          onClick={() => setDrawerVisible(true)}
+          style={{ marginBottom: 16 }}
+        >
+          Filters
+        </Button>
+        <Drawer
+          title={
+            <Title level={4} style={{ margin: 0 }}>
+              <FilterOutlined /> Filters
+            </Title>
+          }
+          placement="left"
+          closable={true}
+          onClose={() => setDrawerVisible(false)}
+          open={drawerVisible}
+          width="80%"
+        >
+          {renderFilters()}
+        </Drawer>
+      </Col>
+
+      {/* Product Listing */}
+      <Col xs={24} md={20}>
+        <Title level={2} style={{ marginBottom: 24, color: "#1a1a1a" }}>
+          Prebuilt PCs
+        </Title>
+        {loading ? (
+          <Spin size="large" style={{ display: "block", textAlign: "center", marginTop: 50 }} />
+        ) : error ? (
+          <Text type="danger">{error}</Text>
+        ) : filteredPCs.length === 0 ? (
+          <Empty description="No prebuilt PCs found matching your criteria" />
+        ) : (
+          <Row gutter={[16, 16]}>
+            {filteredPCs.map((pc) => (
+              <Col xs={24} sm={12} md={8} lg={6} key={pc.id}>
+                <Card
+                  hoverable
+                  cover={
+                    <img
+                      alt={pc.name || "Prebuilt PC"}
+                      src={pc.imageUrl || "https://via.placeholder.com/300x200?text=No+Image"}
+                      style={{ height: 200, objectFit: "cover", borderRadius: "8px 8px 0 0" }}
+                    />
+                  }
+                  style={{
+                    borderRadius: 8,
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                    cursor: "pointer",
+                    height: "400px",
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                  bodyStyle={{
+                    flex: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                  }}
+                  onClick={() => handleCardClick(pc.id)}
+                >
+                  <Card.Meta
+                    title={<Text strong>{pc.name || "Unnamed PC"}</Text>}
+                    description={
+                      <>
+                        <Text ellipsis={{ rows: 2 }}>{pc.description || "No description available"}</Text>
+                        <br />
+                        <Text strong style={{ color: "#52c41a" }}>
+                          ${pc.price ? pc.price.toFixed(2) : "N/A"}
+                        </Text>
+                      </>
+                    }
+                  />
+                  <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
+                    <Button
+                      type="primary"
+                      icon={<ShoppingOutlined />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleBuyNow(pc);
+                      }}
+                    >
+                      Buy Now
+                    </Button>
+                    <Button
+                      icon={<ShoppingCartOutlined />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addToCart(pc);
+                      }}
+                    >
+                      Add to Cart
+                    </Button>
+                  </div>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        )}
+      </Col>
+    </Row>
   );
 };
 

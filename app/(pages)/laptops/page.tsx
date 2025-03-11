@@ -1,9 +1,31 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useCart } from "@/app/context/CardContext";
+import {
+  Row,
+  Col,
+  Card,
+  Button,
+  InputNumber,
+  Skeleton,
+  Typography,
+  message,
+  Image,
+} from "antd";
+import {
+  ShoppingCartOutlined,
+  HeartOutlined,
+  ArrowRightOutlined,
+} from "@ant-design/icons";
+import Layout from "@/app/components/Layout";
+
+const { Title, Text } = Typography;
 
 interface Laptop {
+  id: string;
   name: string;
   brand: string;
   screenSize: string;
@@ -16,174 +38,65 @@ interface Laptop {
   discount?: string;
   sku: string;
   condition: string;
+  stock: number;
+  imageUrl?: string;
+  description: string;
 }
 
-const laptopData: Laptop[] = [
-  {
-    name: "MSI GS77 Ghost",
-    brand: "MSI",
-    screenSize: "17 inches",
-    resolution: "3840x2400",
-    processor: "Intel i9-13950HX",
-    ram: "64GB DDR5",
-    storage: "4TB SSD",
-    gpu: "RTX 4090",
-    price: 4299,
-    discount: "Limited stock offer",
-    sku: "MSI-GS77-Ghost",
-    condition: "New",
-    
-  },
-  {
-    name: "Google Pixelbook Go",
-    brand: "Google",
-    screenSize: "13.3 inches",
-    resolution: "1920x1080",
-    processor: "Intel i5-1240P",
-    ram: "8GB LPDDR4x",
-    storage: "128GB SSD",
-    gpu: "Integrated",
-    price: 699,
-    discount: "Chrome OS upgrade kit",
-    sku: "PixelbookGo",
-    condition: "New",
-    
-  },
-  {
-    name: "Acer Swift X",
-    brand: "Acer",
-    screenSize: "14 inches",
-    resolution: "1920x1200",
-    processor: "AMD Ryzen 7 7840U",
-    ram: "16GB LPDDR5",
-    storage: "1TB SSD",
-    gpu: "Integrated",
-    price: 1199,
-    discount: "3-year warranty",
-    sku: "SwiftX-7840U",
-    condition: "New",
-    
-  },
-  {
-    name: "Huawei MateBook X Pro",
-    brand: "Huawei",
-    screenSize: "14.2 inches",
-    resolution: "3120x2080",
-    processor: "Intel i7-1360P",
-    ram: "16GB LPDDR5",
-    storage: "1TB SSD",
-    gpu: "Integrated",
-    price: 1799,
-    discount: "Free stylus included",
-    sku: "MateBookXPro-2023",
-    condition: "New",
-   
-  },
-  {
-    name: "ASUS ZenBook Pro 16X",
-    brand: "ASUS",
-    screenSize: "16 inches",
-    resolution: "3200x2000",
-    processor: "AMD Ryzen 9 7945HX",
-    ram: "32GB DDR5",
-    storage: "2TB SSD",
-    gpu: "RTX 4070",
-    price: 2599,
-    discount: "Student bundle offer",
-    sku: "ZenBookPro16X",
-    condition: "New",
-    
-  },
-  {
-    name: "Fujitsu LIFEBOOK U938",
-    brand: "Fujitsu",
-    screenSize: "13.3 inches",
-    resolution: "1920x1080",
-    processor: "Intel i5-1240P",
-    ram: "16GB LPDDR4x",
-    storage: "512GB SSD",
-    gpu: "Integrated",
-    price: 1399,
-    discount: "Business discount",
-    sku: "FujitsuU938",
-    condition: "New",
-    
-  },
-  {
-    name: "Samsung Galaxy Book3 Pro 16",
-    brand: "Samsung",
-    screenSize: "16 inches",
-    resolution: "3000x1875",
-    processor: "Intel i9-13900H",
-    ram: "16GB LPDDR5",
-    storage: "512GB SSD",
-    gpu: "RTX 4050",
-    price: 1999,
-    discount: "Free S Pen",
-    sku: "GalaxyBook3-16",
-    condition: "New",
-    
-  },
-  {
-    name: "Toshiba dynabook R74/W",
-    brand: "Toshiba",
-    screenSize: "14 inches",
-    resolution: "1920x1080",
-    processor: "AMD Ryzen 5 5625U",
-    ram: "8GB DDR4",
-    storage: "256GB SSD",
-    gpu: "Integrated",
-    price: 799,
-    discount: "Refurbished - 1 year warranty",
-    sku: "ToshibaR74W",
-    condition: "Refurbished",
-   
-  },
-  {
-    name: "VAIO Pro 15 Gen 7",
-    brand: "VAIO",
-    screenSize: "15.6 inches",
-    resolution: "1920x1080",
-    processor: "Intel i7-1360P",
-    ram: "16GB LPDDR5",
-    storage: "512GB SSD",
-    gpu: "Integrated",
-    price: 1499,
-    discount: "Japanese design edition",
-    sku: "VAIOPro15-Gen7",
-    condition: "New",
-    
-  },
-  {
-    name: "Sony VGN-Z54BN",
-    brand: "Sony",
-    screenSize: "13.3 inches",
-    resolution: "1920x1080",
-    processor: "Intel i5-1240P",
-    ram: "8GB LPDDR4x",
-    storage: "256GB SSD",
-    gpu: "Integrated",
-    price: 1199,
-    discount: "Vintage design special",
-    sku: "SonyVGN-Z54BN",
-    condition: "New",
-    
-  },
-
-];const categories: Record<string, string[]> = {
-  brand: ["ASUS", "Dell", "Acer", "Lenovo", "MSI", "HP", "Razer"],
-  screenSize: ["13 inches", "14 inches", "15.6 inches", "16 inches", "17 inches"],
-  resolution: ["1920x1080", "2560x1600", "3840x2160"],
+const categories: Record<string, string[]> = {
+  brand: ["ASUS", "Dell", "Acer", "Lenovo", "MSI", "HP", "Razer", "Google", "Huawei", "Fujitsu", "Samsung", "Toshiba", "VAIO", "Sony"],
+  screenSize: ["13.3 inches", "14 inches", "14.2 inches", "15.6 inches", "16 inches", "17 inches"],
+  resolution: ["1920x1080", "1920x1200", "2560x1600", "3000x1875", "3120x2080", "3200x2000", "3840x2160", "3840x2400"],
   processor: ["Intel i5", "Intel i7", "Intel i9", "AMD Ryzen 5", "AMD Ryzen 7", "AMD Ryzen 9"],
   ram: ["8GB", "16GB", "32GB", "64GB"],
-  storage: ["256GB SSD", "512GB SSD", "1TB SSD", "2TB SSD"],
-  gpu: ["RTX 3050", "RTX 3060", "RTX 3070", "RTX 4060", "RTX 4070", "RTX 4080", "RTX 4090"],
+  storage: ["128GB SSD", "256GB SSD", "512GB SSD", "1TB SSD", "2TB SSD", "4TB SSD"],
+  gpu: ["Integrated", "RTX 3050", "RTX 3060", "RTX 3070", "RTX 4050", "RTX 4060", "RTX 4070", "RTX 4080", "RTX 4090"],
   condition: ["New", "Used", "Refurbished"],
 };
 
-const Page: React.FC = () => {
+const LaptopsPage: React.FC = () => {
   const [filters, setFilters] = useState<Record<string, string[]>>({});
+  const [laptops, setLaptops] = useState<Laptop[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
+  const [isMounted, setIsMounted] = useState<boolean>(false); // Added to track client-side mounting
   const { addToCart } = useCart();
+  const router = useRouter();
+
+  useEffect(() => {
+    setIsMounted(true); // Mark as mounted on client
+
+    const fetchLaptops = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch("http://localhost:4000/categories/Laptops");
+        if (!response.ok) {
+          const text = await response.text();
+          console.log("Raw response:", text);
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data: Laptop[] = await response.json();
+        setLaptops(data);
+
+        // Initialize quantities
+        const initialQuantities = data.reduce((acc, laptop) => {
+          acc[laptop.id] = 1;
+          return acc;
+        }, {} as { [key: string]: number });
+        setQuantities(initialQuantities);
+      } catch (err) {
+        console.error("Fetch error:", err);
+        setError((err as Error).message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLaptops();
+
+    return () => setIsMounted(false); // Cleanup
+  }, []);
 
   // Handle filter changes
   const handleFilterChange = (category: string, value: string) => {
@@ -202,24 +115,65 @@ const Page: React.FC = () => {
   };
 
   // Apply filters to laptops
-  const filteredLaptops = laptopData.filter((laptop) => {
+  const filteredLaptops = laptops.filter((laptop) => {
     return Object.entries(filters).every(([category, values]) => {
-      if (values.length === 0) return true; // No filter applied for this category
-      const laptopValue = laptop[category as keyof Laptop]?.toString().toLowerCase(); // Get laptop property value
-      return values.some((value) => laptopValue?.includes(value.toLowerCase())); // Check if any filter matches
+      if (values.length === 0) return true;
+      const laptopValue = laptop[category as keyof Laptop]?.toString().toLowerCase();
+      return values.some((value) => laptopValue?.includes(value.toLowerCase()));
     });
   });
 
+  // Handle quantity change
+  const handleQuantityChange = (id: string, value: number | null) => {
+    if (value !== null) {
+      setQuantities((prev) => ({ ...prev, [id]: value }));
+    }
+  };
+
+  // Handle add to cart
+  const handleAddToCart = (id: string) => {
+    const laptop = laptops.find((l) => l.id === id);
+    if (laptop) {
+      addToCart({
+        sku: laptop.sku,
+        name: laptop.name,
+        price: laptop.price,
+        quantity: quantities[id] || 1,
+      } as any);
+      message.success(`${laptop.name} added to cart!`);
+    }
+  };
+
+  // Handle add to favorites (placeholder)
+  const handleAddToFavorites = (id: string) => {
+    const laptop = laptops.find((l) => l.id === id);
+    if (laptop) {
+      message.success(`${laptop.name} added to favorites!`);
+      // Implement favorites logic here if needed
+    }
+  };
+
+  // Render nothing until mounted to avoid hydration mismatch
+  if (!isMounted) {
+    return null; // Or a static placeholder that matches server render
+  }
+
   return (
+    <Layout>
     <div className="flex">
-      {/* Filters Sidebar */}
+      {/* Filters Sidebar (Loads Immediately) */}
       <div className="w-64 bg-gray-900 text-white p-4 border-r border-red-500">
         <h2 className="text-xl font-bold text-red-500 mb-4">Filters</h2>
         {Object.entries(categories).map(([category, options]) => (
           <div key={category} className="mb-4">
-            <h3 className="text-lg font-semibold mb-2 capitalize">{category.replace(/([A-Z])/g, " $1")}</h3>
+            <h3 className="text-lg font-semibold mb-2 capitalize">
+              {category.replace(/([A-Z])/g, " $1")}
+            </h3>
             {options.map((option) => (
-              <label key={option} className="flex items-center space-x-2 cursor-pointer text-sm">
+              <label
+                key={`${category}-${option}`}
+                className="flex items-center space-x-2 cursor-pointer text-sm"
+              >
                 <input
                   type="checkbox"
                   checked={filters[category]?.includes(option) || false}
@@ -231,38 +185,126 @@ const Page: React.FC = () => {
             ))}
           </div>
         ))}
-      </div>{/* Laptops List */}
-      <div className="flex-1 p-4">
-        <h2 className="text-2xl font-bold text-red-500 mb-4">Laptops</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {filteredLaptops.map((laptop) => (
-            <div
-              key={laptop.sku}
-              className="bg-white shadow-md rounded-lg p-4 border border-gray-200 overflow-hidden"
-            >
-              <h3 className="text-lg font-semibold text-gray-700">{laptop.name}</h3>
-              <p className="text-gray-700">
-                {laptop.screenSize}, {laptop.resolution}
-              </p>
-              <p className="text-gray-700">
-                {laptop.processor}, {laptop.ram}, {laptop.storage}, {laptop.gpu}, {laptop.condition}
-              </p>
-              <p className="text-red-500 font-bold">${laptop.price.toFixed(2)}</p>
-              {laptop.discount && <p className="text-gray-500 line-through">{laptop.discount}</p>}
-              <button
-                onClick={() =>
-                  addToCart({ sku: laptop.sku, name: laptop.name, price: laptop.price, quantity: 1 } as any)
-                }
-                className="mt-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
-              >
-                Add to Cart
-              </button>
-            </div>
-          ))}
-        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 container mx-auto md:px-36 px-12 py-12">
+        <Link href="/laptops">
+          <Title
+            level={2}
+            style={{
+              color: "#1890ff",
+              marginBottom: "40px",
+              textAlign: "start",
+              fontWeight: "bold",
+            }}
+          >
+            Real Laptops <ArrowRightOutlined />
+          </Title>
+        </Link>
+
+        {loading ? (
+          <Row gutter={[24, 24]} justify="start">
+            {Array(5)
+              .fill(null)
+              .map((_, index) => (
+                <Col xs={24} sm={12} md={8} lg={6} key={index}>
+                  <Skeleton
+                    active
+                    avatar
+                    paragraph={{ rows: 4 }}
+                    style={{ padding: "16px", background: "#fff", borderRadius: "8px" }}
+                  />
+                </Col>
+              ))}
+          </Row>
+        ) : error ? (
+          <Text className="text-red-500">{error}</Text>
+        ) : filteredLaptops.length === 0 ? (
+          <Text>No laptops found.</Text>
+        ) : (
+          <Row gutter={[24, 24]} justify="start">
+            {filteredLaptops.map((laptop) => (
+              <Col xs={24} sm={12} md={8} lg={6} key={laptop.id}>
+                <Card
+                  hoverable
+                  className="rounded-lg shadow-md relative h-full flex flex-col justify-between"
+                  style={{ minHeight: "fit-content" }}
+                    cover={
+                      laptop.imageUrl ? (
+                        <Image
+                          src={laptop.imageUrl}
+                          alt={laptop.name}
+                          height={200}
+                          className="object-cover rounded-t-lg"
+                          preview={true} // Enable preview
+                          onClick={(e) => e.stopPropagation()} // Prevent navigation on image click
+                        />
+                      ) : (
+                        <div className="h-52 bg-gray-200 flex items-center justify-center rounded-t-lg">
+                          <Text type="secondary">No Image Available</Text>
+                        </div>
+                      )
+                    }
+                >
+                  <Button
+                    type="text"
+                    icon={<HeartOutlined className="text-red-500 text-xl" />}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAddToFavorites(laptop.id);
+                    }}
+                    className="absolute top-2 right-2 bg-white rounded-full p-2 shadow-md hover:bg-red-100"
+                  />
+                  <div className="flex flex-col justify-between flex-grow"
+                    onClick={() => router.push(`/laptops/${laptop.id}`)}
+
+                  >
+                    <Card.Meta
+                      title={
+                        <Text strong className="text-lg text-gray-800 font-semibold">
+                          {laptop.name}
+                        </Text>
+                      }
+                      description={
+                        <Text className="text-gray-600 text-sm mt-2 block">{laptop.description}</Text>
+                      }
+                    />
+                    <div className="mt-2">
+                      <Text className="text-green-600 font-semibold">${laptop.price}</Text>
+                    </div>
+                    <div className="flex justify-between items-center mt-3">
+                      <InputNumber
+                        min={1}
+                        max={laptop.stock}
+                        value={quantities[laptop.id]}
+                        onChange={(value) => handleQuantityChange(laptop.id, value)}
+                        size="small"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <Button
+                        type="primary"
+                        icon={<ShoppingCartOutlined />}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddToCart(laptop.id);
+                        }}
+                        size="small"
+                        className="bg-blue-500 border-blue-500 text-white rounded-md px-3"
+                      >
+                        Add
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        )}
       </div>
     </div>
+    </Layout>
   );
 };
 
-export default Page;
+export default LaptopsPage;

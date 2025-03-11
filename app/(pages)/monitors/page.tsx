@@ -1,86 +1,38 @@
 "use client";
 
-import React, { useState } from "react";
-import { useCart } from "@/app/context/CardContext";
-interface Monitor {
-  name: string;
-  brand: string;
-  screenSize: string;
-  resolution: string;
-  refreshRate: string;
-  panelType: string;
-  responseTime: string;
-  price: number;
-  discount?: string;
-  sku: string;
-  condition: string;
-}
+import React, { useState, useEffect } from "react";
+import { useCart } from "@/app/context/CardContext"; // Assuming typo; should be CartContext
+import { Image, Skeleton, Card, Typography, Row, Col, message, Button, InputNumber } from "antd";
+import { ShoppingCartOutlined, HeartOutlined, ArrowRightOutlined } from "@ant-design/icons";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import Layout from "@/app/components/Layout";
 
-const monitorData: Monitor[] = [
-  {
-    name: "ASUS TUF Gaming VG27AQ",
-    brand: "ASUS",
-    screenSize: "27 inches",
-    resolution: "2560x1440",
-    refreshRate: "165Hz",
-    panelType: "IPS",
-    responseTime: "1ms",
-    price: 350,
-    discount: "5% off with VISA cards",
-    sku: "VG27AQ",
-    condition: "New",
-  },
-  {
-    name: "LG UltraGear 32GN650-B",
-    brand: "LG",
-    screenSize: "32 inches",
-    resolution: "2560x1440",
-    refreshRate: "165Hz",
-    panelType: "VA",
-    responseTime: "1ms",
-    price: 299,
-    discount: "10% off with Mastercard",
-    sku: "32GN650-B",
-    condition: "New",
-  },
-  {
-    name: "Dell S2721DGF",
-    brand: "Dell",
-    screenSize: "27 inches",
-    resolution: "2560x1440",
-    refreshRate: "165Hz",
-    panelType: "IPS",
-    responseTime: "1ms",
-    price: 380,
-    sku: "S2721DGF",
-    condition: "New",
-  },
-  {
-    name: "Acer Nitro XV272U",
-    brand: "Acer",
-    screenSize: "27 inches",
-    resolution: "2560x1440",
-    refreshRate: "144Hz",
-    panelType: "IPS",
-    responseTime: "1ms",
-    price: 320,
-    sku: "XV272U",
-    condition: "New",
-  },
-  {
-    name: "Samsung Odyssey G7",
-    brand: "Samsung",
-    screenSize: "32 inches",
-    resolution: "2560x1440",
-    refreshRate: "240Hz",
-    panelType: "VA",
-    responseTime: "1ms",
-    price: 550,
-    discount: "$50 off for students",
-    sku: "G7-32",
-    condition: "New",
-  },
-];
+const { Title, Text } = Typography;
+
+interface Monitor {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  category: {
+    name: string;
+  };
+  categoryId: string;
+  stock: number;
+  imageUrl?: string | null;
+  specifications?: {
+    screenSize?: string;
+    resolution?: string;
+    refreshRate?: string;
+    panelType?: string;
+    responseTime?: string;
+    brand?: string; // Added as optional in case your API includes it here
+    [key: string]: any;
+  } | null;
+  createdAt: string;
+  updatedAt: string;
+}
 
 const categories: Record<string, string[]> = {
   brand: ["ASUS", "LG", "Acer", "Dell", "BenQ", "MSI", "Samsung"],
@@ -89,14 +41,62 @@ const categories: Record<string, string[]> = {
   refreshRate: ["60Hz", "120Hz", "144Hz", "165Hz", "240Hz"],
   panelType: ["IPS", "VA", "TN"],
   responseTime: ["1ms", "2ms", "5ms"],
-  condition: ["New", "Used", "Renewed"],
+  // Removed condition since it’s not in the Product model
 };
 
-const Page: React.FC = () => {
+const MonitorsPage: React.FC = () => {
   const [filters, setFilters] = useState<Record<string, string[]>>({});
   const [price, setPrice] = useState<number>(1000);
   const [minPrice, setMinPrice] = useState<number>(0);
+  const [monitors, setMonitors] = useState<Monitor[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState<boolean>(false);
+  const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
   const { addToCart } = useCart();
+  const router = useRouter();
+
+  const isLoggedIn = () => {
+    const token = sessionStorage.getItem("token");
+    return !!token;
+  };
+
+  useEffect(() => {
+    setIsMounted(true);
+
+    const fetchMonitors = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch("http://localhost:4000/products"); // Adjust to your API
+        if (!response.ok) {
+          const text = await response.text();
+          console.log("Raw response:", text);
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data: Monitor[] = await response.json();
+        const monitorProducts = data.filter((product) =>
+          product.category.name.toLowerCase().includes("monitor")
+        );
+        setMonitors(monitorProducts);
+
+        const initialQuantities = monitorProducts.reduce((acc, product) => {
+          acc[product.id] = 1;
+          return acc;
+        }, {} as { [key: string]: number });
+        setQuantities(initialQuantities);
+      } catch (err) {
+        console.error("Fetch error:", err);
+        setError((err as Error).message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMonitors();
+
+    return () => setIsMounted(false);
+  }, []);
+
   const handleFilterChange = (category: string, value: string) => {
     setFilters((prev) => {
       const updatedFilters = { ...prev };
@@ -115,17 +115,79 @@ const Page: React.FC = () => {
     setMinPrice(Number(event.target.value));
   };
 
-  const filteredMonitors = monitorData.filter((monitor) => {
+  const handleAddToCart = async (monitorId: string) => {
+    if (!isLoggedIn()) {
+      message.warning("Please sign in to add items to your cart.");
+      router.push("/signin");
+      return;
+    }
+
+    const quantity = quantities[monitorId] || 1;
+    const token = sessionStorage.getItem("token");
+
+    try {
+      const response = await fetch("http://localhost:3000/cart/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ productId: monitorId, quantity }),
+      });
+      if (!response.ok) throw new Error("Failed to add to cart");
+      message.success("Item added to cart successfully!");
+      addToCart({
+        id: monitorId,
+        name: monitors.find((m) => m.id === monitorId)!.name,
+        price: monitors.find((m) => m.id === monitorId)!.price,
+        quantity,
+      });
+    } catch (err) {
+      message.error(err instanceof Error ? err.message : "Failed to add to cart");
+    }
+  };
+
+  const handleAddToFavorites = (monitorId: string) => {
+    if (!isLoggedIn()) {
+      message.warning("Please sign in to add items to your favorites.");
+      router.push("/signin");
+      return;
+    }
+    message.success("Added to favorites!");
+  };
+
+  const handleQuantityChange = (monitorId: string, value: number | null) => {
+    if (value !== null && value > 0) {
+      setQuantities((prev) => ({ ...prev, [monitorId]: value }));
+    }
+  };
+
+  const filteredMonitors = monitors.filter((monitor) => {
     return (
       monitor.price >= minPrice &&
       monitor.price <= price &&
-      Object.entries(filters).every(([category, values]) =>
-        values.length === 0 || values.includes((monitor as any)[category])
-      )
+      Object.entries(filters).every(([category, values]) => {
+        if (values.length === 0) return true; // No filter applied for this category
+        if (category === "brand") {
+          // Check brand in specifications or name/description as fallback
+          const brandValue = monitor.specifications?.brand || monitor.name.toLowerCase();
+          return values.some((value) => brandValue?.toLowerCase().includes(value.toLowerCase()));
+        }
+        // Check other categories in specifications
+        const specValue = monitor.specifications?.[category];
+        return specValue && values.includes(specValue);
+      })
     );
   });
+
+  if (!isMounted) {
+    return null;
+  }
+
   return (
+    <Layout>
     <div className="flex">
+      {/* Sidebar */}
       <div className="w-64 bg-gray-900 text-white p-4 border-r border-red-500">
         <h2 className="text-xl font-bold text-red-500 mb-4">Filters</h2>
         {Object.entries(categories).map(([category, options]) => (
@@ -147,33 +209,131 @@ const Page: React.FC = () => {
           </div>
         ))}
       </div>
-      <div className="flex-1 p-4">
-        <h2 className="text-2xl font-bold text-red-500 mb-4">Monitors</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {filteredMonitors.map((monitor) => (
-            <div key={monitor.sku} className="bg-white shadow-md rounded-lg overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow">
-              <div className="h-48 bg-gray-200 flex items-center justify-center">
-                <span className="text-gray-400">Image</span>
-              </div>
-              <div className="p-4 space-y-2">
-                <h3 className="text-lg font-bold text-gray-800">{monitor.name}</h3>
-                <p className="text-sm text-gray-600">{monitor.screenSize}</p>
-                <p className="text-sm text-gray-500">{monitor.brand}, {monitor.resolution}, {monitor.refreshRate}, {monitor.responseTime}, {monitor.condition}</p>
-                <p className="text-green-600 font-semibold">${monitor.price}</p>
-                {monitor.discount && <p className="text-yellow-600 font-medium">{monitor.discount}</p>}
-                <button 
-                className="mt-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                onClick={() => addToCart({ sku: monitor.sku, name: monitor.name, price: monitor.price, quantity: 1 } as any)}
-              >
-                Add to Cart
-              </button>
-              </div>
-            </div>
-          ))}
-        </div>
+
+      {/* Main Content */}
+      <div className="flex-1 container mx-auto md:px-36 px-12 py-12">
+        <Link href="/monitors">
+          <Title
+            level={2}
+            style={{
+              color: "#1890ff",
+              marginBottom: "40px",
+              textAlign: "start",
+              fontWeight: "bold",
+            }}
+          >
+            Real Monitors <ArrowRightOutlined />
+          </Title>
+        </Link>
+
+        {loading ? (
+          <Row gutter={[24, 24]} justify="start">
+            {Array(5)
+              .fill(null)
+              .map((_, index) => (
+                <Col xs={24} sm={12} md={8} lg={6} key={index}>
+                  <Skeleton
+                    active
+                    avatar
+                    paragraph={{ rows: 4 }}
+                    style={{ padding: "16px", background: "#fff", borderRadius: "8px" }}
+                  />
+                </Col>
+              ))}
+          </Row>
+        ) : error ? (
+          <Text className="text-red-500">{error}</Text>
+        ) : filteredMonitors.length === 0 ? (
+          <Text>No monitors found.</Text>
+        ) : (
+          <Row gutter={[24, 24]} justify="start">
+            {filteredMonitors.map((monitor) => (
+              <Col xs={24} sm={12} md={8} lg={6} key={monitor.id}>
+                <Card
+                  hoverable
+                  className="rounded-lg shadow-md relative h-full flex flex-col justify-between"
+                  style={{ minHeight: "fit-content" }}
+                  cover={
+                    monitor.imageUrl ? (
+                      <Image
+                        src={monitor.imageUrl}
+                        alt={monitor.name}
+                        height={200}
+                        className="object-cover rounded-t-lg"
+                        preview={true}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    ) : (
+                      <div className="h-52 bg-gray-200 flex items-center justify-center rounded-t-lg">
+                        <Text type="secondary">No Image Available</Text>
+                      </div>
+                    )
+                  }
+                >
+                  {/* Favorites Button */}
+                  <Button
+                    type="text"
+                    icon={<HeartOutlined className="text-red-500 text-xl" />}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAddToFavorites(monitor.id);
+                    }}
+                    className="absolute top-2 right-2 bg-white rounded-full p-2 shadow-md hover:bg-red-100"
+                  />
+
+                  {/* Card Content */}
+                  <div className="flex flex-col justify-between flex-grow"
+                    onClick={() => router.push(`/monitors/${monitor.id}`)}
+                  >
+                    <Card.Meta
+                      title={
+                        <Text strong className="text-lg text-gray-800 font-semibold">
+                          {monitor.name}
+                        </Text>
+                      }
+                      description={
+                        <>
+                          <Text className="text-gray-600 text-sm mt-2 block">{monitor.description}</Text>
+                        </>
+                      }
+                    />
+                    <div className="mt-2">
+                      <Text className="text-green-600 font-semibold">${monitor.price}</Text>
+                    </div>
+
+                    {/* Footer (Quantity Selector + Add to Cart) */}
+                    <div className="flex justify-between items-center mt-3">
+                      <InputNumber
+                        min={1}
+                        max={monitor.stock}
+                        value={quantities[monitor.id]}
+                        onChange={(value) => handleQuantityChange(monitor.id, value)}
+                        size="small"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <Button
+                        type="primary"
+                        icon={<ShoppingCartOutlined />}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddToCart(monitor.id);
+                        }}
+                        size="small"
+                        className="bg-blue-500 border-blue-500 text-white rounded-md px-3"
+                      >
+                        Add
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        )}
       </div>
     </div>
+    </Layout>
   );
 };
 
-export default Page;
+export default MonitorsPage;

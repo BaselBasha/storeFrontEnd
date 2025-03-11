@@ -1,6 +1,6 @@
 'use client';
 
-import { Image, Skeleton } from 'antd'; // Added Skeleton import
+import { Image, Skeleton } from 'antd';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -52,12 +52,15 @@ const GpuList = () => {
         const response = await fetch('http://localhost:4000/products');
         if (!response.ok) throw new Error('Failed to fetch GPUs');
         const data: Product[] = await response.json();
-        const gpuProducts = data.filter(
-          (product) =>
-            product.category.name.toLowerCase().includes('gpu') ||
-            product.specifications?.architecture ||
-            product.specifications?.memory
-        );
+        const gpuProducts = data
+          .filter(
+            (product) =>
+              product.category.name.toLowerCase().includes('gpu') ||
+              product.specifications?.architecture ||
+              product.specifications?.memory
+          )
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) // Sort by createdAt descending
+          .slice(0, 4); // Take the last 4 (most recent) products
         setGpus(gpuProducts);
 
         const initialQuantities = gpuProducts.reduce((acc, product) => {
@@ -134,7 +137,7 @@ const GpuList = () => {
             fontWeight: 'bold',
           }}
         >
-          Real GPUs <ArrowRightOutlined />
+          Latest GPUs <ArrowRightOutlined />
         </Title>
       </Link>
 
