@@ -3,8 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import ProtectedAdmin from '@/app/components/ProtectedAdmin';
 import { Sidebar } from '@/app/components/sidebar';
-import { Input, Table, message, Button, Popconfirm, Image, Space } from 'antd';
-import { SearchOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Form, Input, InputNumber, Button, message, Select, Image } from 'antd';
+import TextArea from 'antd/es/input/TextArea';
+import { useRouter } from 'next/navigation';
+
+interface Category {
+  value: string;
+  label: string;
+}
 
 interface Product {
   id: string;
@@ -15,171 +21,231 @@ interface Product {
   stock: number;
   imageUrl?: string | null;
   specifications?: Record<string, any> | null;
-  createdAt: string;
-  updatedAt: string;
-  category?: {
-    id: string;
-    name: string;
-    description: string;
-    createdAt: string;
-    updatedAt: string;
-  };
 }
 
-export default function EditProduct() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+interface ProductFormValues {
+  name: string;
+  price: number;
+  description: string;
+  categoryId: string;
+  stock: number;
+  specifications?: string;
+  imageUrl?: string | null;
+}
+
+export default function EditSingleProduct({ params }: { params: { id: string } }) {
+  const [form] = Form.useForm<ProductFormValues>();
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [submitting, setSubmitting] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  const router = useRouter();
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:4000/products');
-        if (!response.ok) throw new Error('Failed to fetch products');
-        const data: Product[] = await response.json();
-        setProducts(data);
-        setFilteredProducts(data);
-      } catch (err) {
-        message.error(err instanceof Error ? err.message : 'An error occurred');
+        const productResponse = await fetch(`http://localhost:4000/products/${params.id}`);
+        if (!productResponse.ok) throw new Error('Failed to fetch product');
+        const product: Product = await productResponse.json();
+        form.setFieldsValue({
+          ...product,
+          specifications: product.specifications ? JSON.stringify(product.specifications) : undefined,
+        });
+        setImagePreview(product.imageUrl || null);
+
+        const categoriesResponse = await fetch('http://localhost:4000/categories');
+        if (!categoriesResponse.ok) throw new Error('Failed to fetch categories');
+        const categoriesData: { id: string; name: string }[] = await categoriesResponse.json();
+        const formattedCategories: Category[] = categoriesData.map(category => ({
+          value: category.id,
+          label: category.name,
+        }));
+        setCategories(formattedCategories);
+      } catch (error) {
+        console.error('Fetch error:', error);
+        message.error('Failed to load data');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProducts();
-  }, []);
+    fetchData();
+  }, [params.id, form]);
 
-  const handleSearch = (value: string) => {
-    setSearchQuery(value);
-    if (value.trim() === '') {
-      setFilteredProducts(products);
-    } else {
-      const filtered = products.filter((product) =>
-        product.name.toLowerCase().includes(value.toLowerCase())
-      );
-      setFilteredProducts(filtered);
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      message.error('No file selected');
+      return;
     }
+
+    if (!file.type.startsWith('image/')) {
+      message.error('Invalid image format. Please upload a PNG, JPG, or GIF.');
+      return;
+    }
+
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onload = () => setImagePreview(reader.result as string);
+    reader.onerror = () => message.error('Failed to process image preview');
+    reader.readAsDataURL(file);
   };
 
-  const handleDelete = async (id: string) => {
+  const uploadImage = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await fetch('http://localhost:4000/images/upload', {
+      method: 'POST',
+      body: formData,
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Image upload failed: ${errorText}`);
+    }
+    const data = await response.json();
+    return data.url;
+  };
+
+  const onFinish = async (values: ProductFormValues) => {
+    setSubmitting(true);
     try {
-      const response = await fetch(`http://localhost:4000/products/${id}`, {
-        method: 'DELETE',
+      let imageUrl = values.imageUrl;
+      if (imageFile) {
+        imageUrl = await uploadImage(imageFile);
+      }
+
+      const updatedProduct = {
+        ...values,
+        imageUrl,
+        specifications: values.specifications ? JSON.parse(values.specifications) : null,
+      };
+
+      const response = await fetch(`http://localhost:4000/products/${params.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedProduct),
       });
-      if (!response.ok) throw new Error('Failed to delete product');
-      const updatedProducts = products.filter((product) => product.id !== id);
-      setProducts(updatedProducts);
-      setFilteredProducts(updatedProducts);
-      message.success('Product deleted successfully');
-    } catch (err) {
-      message.error(err instanceof Error ? err.message : 'Failed to delete product');
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Product update failed: ${errorText}`);
+      }
+
+      message.success('Product updated successfully');
+      router.push('/admin/products');
+    } catch (error) {
+      console.error('Error in onFinish:', error);
+      message.error(`Failed to update product: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setSubmitting(false);
     }
   };
-
-  const columns = [
-    {
-      title: 'Image',
-      dataIndex: 'imageUrl',
-      key: 'imageUrl',
-      render: (imageUrl: string | null) =>
-        imageUrl ? (
-          <Image
-            src={imageUrl}
-            alt="Product"
-            width={50}
-            height={50}
-            style={{ objectFit: 'cover', borderRadius: '4px' }}
-          />
-        ) : (
-          <span>No Image</span>
-        ),
-      width: 80,
-    },
-    {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
-    },
-    {
-      title: 'Description',
-      dataIndex: 'description',
-      key: 'description',
-      ellipsis: true,
-    },
-    {
-      title: 'Price',
-      dataIndex: 'price',
-      key: 'price',
-      render: (price: number) => `$${price.toFixed(2)}`,
-    },
-    {
-      title: 'Stock',
-      dataIndex: 'stock',
-      key: 'stock',
-    },
-    {
-      title: 'Category',
-      dataIndex: ['category', 'name'],
-      key: 'category',
-      render: (text: string, record: Product) => record.category?.name || 'N/A',
-    },
-    {
-      title: 'Actions',
-      key: 'action',
-      render: (_: any, record: Product) => (
-        <Space size="middle">
-          <Button
-            type="primary"
-            icon={<EditOutlined />}
-            href={`/admin/products/product/${record.id}`}
-            style={{ backgroundColor: '#1890ff', borderColor: '#1890ff' }}
-          >
-            Edit
-          </Button>
-          <Popconfirm
-            title="Are you sure you want to delete this product?"
-            onConfirm={() => handleDelete(record.id)}
-            okText="Yes"
-            cancelText="No"
-          >
-            <Button type="primary" danger icon={<DeleteOutlined />}>
-              Delete
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
-      width: 200,
-    },
-  ];
 
   return (
     <ProtectedAdmin>
       <div className="flex flex-col md:flex-row h-screen w-full mx-auto">
         <Sidebar initialOpen={false} />
         <div className="flex-1 p-6 bg-gray-50 overflow-auto">
-          <div className="max-w-7xl mx-auto">
-            <h1 className="text-2xl font-bold mb-6">Edit Products</h1>
+          <div className="max-w-2xl mx-auto">
+            <h1 className="text-2xl font-bold mb-6">Edit Product</h1>
+            {loading ? (
+              <p>Loading...</p>
+            ) : (
+              <Form
+                form={form}
+                onFinish={onFinish}
+                layout="vertical"
+                className="space-y-2"
+              >
+                <Form.Item label="Product Name" name="name" rules={[{ required: true, message: 'Please enter a product name' }]}>
+                  <Input size="middle" placeholder="Enter product name" />
+                </Form.Item>
 
-            <Input.Search
-              placeholder="Search products by name"
-              allowClear
-              enterButton={<SearchOutlined />}
-              size="large"
-              value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
-              onSearch={handleSearch}
-              style={{ marginBottom: 24, maxWidth: 400 }}
-            />
+                <Form.Item label="Price" name="price" rules={[{ required: true, message: 'Please enter a price' }]}>
+                  <InputNumber<number>
+                    size="middle"
+                    min={0}
+                    step={0.01}
+                    formatter={value => `$ ${value}`}
+                    parser={value => parseFloat(value?.replace('$ ', '') || '0')}
+                    style={{ width: '100%' }}
+                  />
+                </Form.Item>
 
-            <Table
-              columns={columns}
-              dataSource={filteredProducts}
-              rowKey="id"
-              loading={loading}
-              pagination={{ pageSize: 10 }}
-              bordered
-            />
+                <Form.Item label="Description" name="description" rules={[{ required: true, message: 'Please enter a description' }]}>
+                  <TextArea rows={3} placeholder="Enter product description" />
+                </Form.Item>
+
+                <Form.Item label="Category" name="categoryId" rules={[{ required: true, message: 'Please select a category' }]}>
+                  <Select size="middle" placeholder="Select category" options={categories} />
+                </Form.Item>
+
+                <Form.Item label="Stock" name="stock" rules={[{ required: true, message: 'Please enter stock quantity' }]}>
+                  <InputNumber<number>
+                    size="middle"
+                    min={0}
+                    placeholder="Stock"
+                    style={{ width: '100%' }}
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  label="Specifications (JSON format, optional)"
+                  name="specifications"
+                  rules={[{
+                    validator: (_, value: string | undefined) => {
+                      if (!value) return Promise.resolve();
+                      try {
+                        JSON.parse(value);
+                        return Promise.resolve();
+                      } catch {
+                        return Promise.reject('Please enter valid JSON');
+                      }
+                    },
+                  }]}
+                >
+                  <TextArea rows={3} placeholder='e.g., {"cpu": "Intel i7", "ram": "16GB"}' />
+                </Form.Item>
+
+                <Form.Item
+                  label="Product Image"
+                  name="imageUrl"
+                  rules={[{ required: true, message: 'Please upload an image' }]}
+                >
+                  <div className="space-y-1">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                    />
+                    {imagePreview && (
+                      <Image
+                        src={imagePreview}
+                        alt="Uploaded Image"
+                        width={150}
+                        height={150}
+                        style={{ objectFit: 'cover' }}
+                      />
+                    )}
+                    <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                  </div>
+                </Form.Item>
+
+                <Form.Item>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    size="middle"
+                    block
+                    loading={submitting}
+                    style={{ backgroundColor: '#1890ff', borderColor: '#1890ff' }}
+                  >
+                    {submitting ? 'Updating Product...' : 'Update Product'}
+                  </Button>
+                </Form.Item>
+              </Form>
+            )}
           </div>
         </div>
       </div>

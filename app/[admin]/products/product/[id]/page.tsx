@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import ProtectedAdmin from '@/app/components/ProtectedAdmin';
 import { Sidebar } from '@/app/components/sidebar';
 import { useRouter } from 'next/navigation';
-import { Card, Form, Input, InputNumber, Button, Image, Space, Popconfirm, message, Upload } from 'antd';
+import { Card, Form, Input, InputNumber, Button, Image, Popconfirm, message, Upload } from 'antd';
 import { EditOutlined, SaveOutlined, DeleteOutlined, UploadOutlined } from '@ant-design/icons';
 import type { UploadFile, UploadProps } from 'antd';
 
@@ -15,7 +15,7 @@ interface Product {
   price: number;
   categoryId: string;
   stock: number;
-  imageUrl?: string | null; // This will now store Base64 strings (e.g., "data:image/jpeg;base64,...")
+  imageUrl?: string | null; // Now stores Cloudinary URL
   specifications?: Record<string, any> | null;
   createdAt: string;
   updatedAt: string;
@@ -69,9 +69,9 @@ export default function ProductPage({ params: paramsPromise }: { params: Promise
     if (isEditing) {
       try {
         const values = await form.validateFields();
-        saveChanges(values);
+        await saveChanges(values); // Await to ensure save completes
       } catch (err) {
-        return; // Don't toggle if validation fails
+        return; // Don't toggle if validation or save fails
       }
     }
     setIsEditing(!isEditing);
@@ -80,15 +80,24 @@ export default function ProductPage({ params: paramsPromise }: { params: Promise
   const handleUpload = async (file: File): Promise<string> => {
     const formData = new FormData();
     formData.append('file', file);
-
+  
+    // Log FormData contents for debugging
+    console.log('FormData contents:');
+    for (const [key, value] of formData.entries()) {
+      console.log(`${key}: ${value}`);
+    }
+  
     try {
       const response = await fetch('http://localhost:4000/images/upload', {
         method: 'POST',
         body: formData,
       });
-      if (!response.ok) throw new Error('Failed to upload image');
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to upload image: ${errorText}`);
+      }
       const data = await response.json();
-      return data.base64; // Return the Base64 string directly
+      return data.url;
     } catch (err) {
       message.error('Image upload failed');
       throw err;
@@ -102,9 +111,9 @@ export default function ProductPage({ params: paramsPromise }: { params: Promise
     },
     beforeUpload: (file) => {
       handleUpload(file)
-        .then((base64) => {
-          setFileList([{ uid: file.uid, name: file.name, status: 'done', url: base64 }]);
-          form.setFieldsValue({ imageUrl: base64 });
+        .then((url) => {
+          setFileList([{ uid: file.uid, name: file.name, status: 'done', url }]);
+          form.setFieldsValue({ imageUrl: url });
         })
         .catch(() => {
           setFileList([{ uid: file.uid, name: file.name, status: 'error' }]);
@@ -122,7 +131,7 @@ export default function ProductPage({ params: paramsPromise }: { params: Promise
         description: values.description,
         price: values.price,
         stock: values.stock,
-        imageUrl: values.imageUrl, // Base64 string or null
+        imageUrl: values.imageUrl, // Cloudinary URL or null
         categoryId: product?.categoryId,
       };
 
