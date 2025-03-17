@@ -87,7 +87,7 @@ export default function AddProduct() {
     try {
       // Step 1: Upload image to Cloudinary via NestJS backend
       const formData = new FormData();
-      formData.append('image', imageFile);
+      formData.append('file', imageFile);
 
       const uploadResponse = await fetch('http://localhost:4000/images/upload', {
         method: 'POST',

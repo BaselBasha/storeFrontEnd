@@ -7,74 +7,69 @@ import { Table, Button, message, Image, Popconfirm, Space, Input, Spin, TableCol
 import { useRouter } from 'next/navigation';
 import { PlusOutlined, SearchOutlined, LoadingOutlined } from '@ant-design/icons';
 
-interface Product {
+interface Category {
   id: string;
   name: string;
   description: string;
-  price: number;
-  categoryId: string;
-  stock: number;
   imageUrl?: string | null;
-  specifications?: Record<string, any> | null;
 }
 
-export default function ProductList() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+export default function CategoryList() {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const router = useRouter();
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchCategories = async () => {
       try {
-        const response = await fetch('http://localhost:4000/products');
-        if (!response.ok) throw new Error('Failed to fetch products');
-        const data: Product[] = await response.json();
-        setProducts(data);
-        setFilteredProducts(data); // Initially, filteredProducts matches products
+        const response = await fetch('http://localhost:4000/categories');
+        if (!response.ok) throw new Error('Failed to fetch categories');
+        const data: Category[] = await response.json();
+        setCategories(data);
+        setFilteredCategories(data);
       } catch (error) {
         console.error('Fetch error:', error);
-        message.error('Failed to load products');
+        message.error('Failed to load categories');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProducts();
+    fetchCategories();
   }, []);
 
-  // Handle search input change
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.toLowerCase();
     setSearchTerm(value);
-    const filtered = products.filter((product) =>
-      product.name.toLowerCase().includes(value)
+    const filtered = categories.filter((category) =>
+      category.name.toLowerCase().includes(value)
     );
-    setFilteredProducts(filtered);
+    setFilteredCategories(filtered);
   };
 
   const handleDelete = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:4000/products/${id}`, {
+      const response = await fetch(`http://localhost:4000/categories/${id}`, {
         method: 'DELETE',
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Failed to delete product: ${errorText}`);
+        throw new Error(`Failed to delete category: ${errorText}`);
       }
 
-      const updatedProducts = products.filter((product) => product.id !== id);
-      setProducts(updatedProducts);
-      setFilteredProducts(
-        filteredProducts.filter((product) => product.id !== id)
+      const updatedCategories = categories.filter((category) => category.id !== id);
+      setCategories(updatedCategories);
+      setFilteredCategories(
+        filteredCategories.filter((category) => category.id !== id)
       );
-      message.success('Product deleted successfully');
+      message.success('Category deleted successfully');
     } catch (error) {
       console.error('Delete error:', error);
       message.error(
-        `Failed to delete product: ${
+        `Failed to delete category: ${
           error instanceof Error ? error.message : 'Unknown error'
         }`
       );
@@ -82,25 +77,24 @@ export default function ProductList() {
   };
 
   const handleEdit = (id: string) => {
-    router.push(`/admin/products/product/${id}`);
+    router.push(`/admin/categories/${id}/edit`);
   };
 
   const handleAddNew = () => {
-    router.push('/admin/products/add-product');
+    router.push('/admin/categories/add-category');
   };
 
-  // Explicitly type columns as TableColumnsType<Product>
-  const columns: TableColumnsType<Product> = [
+  const columns: TableColumnsType<Category> = [
     {
       title: 'Image',
       dataIndex: 'imageUrl',
       key: 'imageUrl',
-      width: '10%',
+      // Removed width: '10%' to let it fit the image content
       render: (imageUrl: string | null) =>
         imageUrl ? (
           <Image
             src={imageUrl}
-            alt="Product"
+            alt="Category"
             width={50}
             height={50}
             style={{ objectFit: 'cover', borderRadius: '4px' }}
@@ -113,20 +107,20 @@ export default function ProductList() {
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
-      width: '20%',
+      width: '25%',
       ellipsis: true,
     },
     {
       title: 'Description',
       dataIndex: 'description',
       key: 'description',
-      width: '30%',
-      ellipsis: true, // Basic ellipsis for single-line truncation
+      width: '40%',
+      ellipsis: true,
       render: (text: string) => (
         <span
           style={{
             display: '-webkit-box',
-            WebkitLineClamp: 2, // Limits to 2 lines
+            WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -137,25 +131,10 @@ export default function ProductList() {
       ),
     },
     {
-      title: 'Price',
-      dataIndex: 'price',
-      key: 'price',
-      width: '15%',
-      render: (price: number) => `$${price.toFixed(2)}`,
-      sorter: (a: Product, b: Product) => a.price - b.price,
-    },
-    {
-      title: 'Stock',
-      dataIndex: 'stock',
-      key: 'stock',
-      width: '10%',
-      sorter: (a: Product, b: Product) => a.stock - b.stock,
-    },
-    {
       title: 'Actions',
       key: 'actions',
-      width: '15%',
-      render: (_: any, record: Product) => (
+      width: '25%',
+      render: (_: any, record: Category) => (
         <Space>
           <Button
             type="primary"
@@ -165,7 +144,7 @@ export default function ProductList() {
             Edit
           </Button>
           <Popconfirm
-            title="Are you sure you want to delete this product?"
+            title="Are you sure you want to delete this category?"
             onConfirm={() => handleDelete(record.id)}
             okText="Yes"
             cancelText="No"
@@ -179,12 +158,10 @@ export default function ProductList() {
     },
   ];
 
-  // Custom loading spinner
   const customLoadingIcon = (
     <LoadingOutlined style={{ fontSize: 48, color: '#1890ff' }} spin />
   );
 
-  // Show loading state until data is fetched
   if (loading) {
     return (
       <ProtectedAdmin>
@@ -193,7 +170,7 @@ export default function ProductList() {
           <div className="flex-1 p-6 bg-gray-100 overflow-auto flex items-center justify-center">
             <div className="text-center">
               <Spin indicator={customLoadingIcon} />
-              <p className="mt-4 text-lg text-gray-600">Loading Product List...</p>
+              <p className="mt-4 text-lg text-gray-600">Loading Category List...</p>
             </div>
           </div>
         </div>
@@ -208,10 +185,10 @@ export default function ProductList() {
         <div className="flex-1 p-6 bg-gray-100 overflow-auto">
           <div className="w-full mx-auto">
             <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-bold text-gray-800">Product List</h1>
+              <h1 className="text-2xl font-bold text-gray-800">Category List</h1>
               <Space>
                 <Input
-                  placeholder="Search by product name"
+                  placeholder="Search by category name"
                   prefix={<SearchOutlined />}
                   value={searchTerm}
                   onChange={handleSearch}
@@ -223,14 +200,14 @@ export default function ProductList() {
                   onClick={handleAddNew}
                   style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
                 >
-                  Add New Product
+                  Add New Category
                 </Button>
               </Space>
             </div>
             <div className="overflow-x-auto w-full">
               <Table
                 columns={columns}
-                dataSource={filteredProducts}
+                dataSource={filteredCategories}
                 rowKey="id"
                 loading={loading}
                 pagination={{ pageSize: 10, showSizeChanger: true }}
