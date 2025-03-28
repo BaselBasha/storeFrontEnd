@@ -25,7 +25,7 @@ const SignUpForm: React.FC = () => {
 
   // Check if user is logged in and redirect
   useEffect(() => {
-    const token = sessionStorage.getItem("accessToken");
+    const token = localStorage.getItem("accessToken");
     if (token) {
       try {
         const decodedToken = JSON.parse(atob(token.split(".")[1]));
@@ -37,6 +37,7 @@ const SignUpForm: React.FC = () => {
       } catch (error) {
         console.error("Invalid token:", error);
         sessionStorage.removeItem("accessToken"); // Clear invalid token
+        localStorage.removeItem("accessToken");
         setLoading(false); // Show the form if token is invalid
       }
     } else {

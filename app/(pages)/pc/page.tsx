@@ -218,7 +218,7 @@ const Page: React.FC = () => {
   };
 
   const addToCart = async (pc: PrebuiltPC) => {
-    const token = sessionStorage.getItem("accessToken");
+    const token = localStorage.getItem("accessToken");
     if (!token) {
       message.error("Please log in to add items to your cart");
       router.push("/login");

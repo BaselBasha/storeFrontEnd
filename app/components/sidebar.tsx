@@ -97,6 +97,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ initialOpen = false }) => {
   // Logout handler
   const handleLogout = () => {
     sessionStorage.removeItem("accessToken");
+    localStorage.removeItem("accessToken");
     router.push("/");
   };
 

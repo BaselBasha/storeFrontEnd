@@ -14,7 +14,7 @@ const SignUpForm: React.FC = () => {
 
   // Check if user is already signed in and notify + redirect
   useEffect(() => {
-    const token = sessionStorage.getItem("accessToken");
+    const token = localStorage.getItem("accessToken");
     if (token) {
       try {
         const decodedToken = JSON.parse(atob(token.split(".")[1]));
@@ -26,6 +26,7 @@ const SignUpForm: React.FC = () => {
       } catch (error) {
         console.error("Invalid token:", error);
         sessionStorage.removeItem("accessToken"); // Clear invalid token
+        localStorage.removeItem("accessToken");
         setLoading(false); // Allow rendering the form
       }
     } else {
@@ -46,7 +47,7 @@ const SignUpForm: React.FC = () => {
         const data = await response.json();
         const token = data.access_token;
         if (token) {
-          sessionStorage.setItem("accessToken", token);
+          localStorage.setItem("accessToken", token);
           const decodedToken = JSON.parse(atob(token.split(".")[1]));
 
           // Notify admin with a custom message

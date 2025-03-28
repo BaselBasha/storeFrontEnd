@@ -40,7 +40,7 @@ const LaptopList = () => {
   const router = useRouter();
 
   const isLoggedIn = () => {
-    const token = sessionStorage.getItem('token');
+    const token = localStorage.getItem('token');
     return !!token;
   };
 
@@ -82,7 +82,7 @@ const LaptopList = () => {
     }
 
     const quantity = quantities[productId] || 1;
-    const token = sessionStorage.getItem('token');
+    const token = localStorage.getItem('token');
 
     try {
       const response = await fetch('http://localhost:3000/cart/add', {

@@ -60,7 +60,7 @@ export default function AmazonNavbar() {
   const [isSignedIn, setIsSignedIn] = useState(false);
 
   useEffect(() => {
-    const token = sessionStorage.getItem('accessToken');
+    const token = localStorage.getItem('accessToken');
     if (token) {
       setIsSignedIn(true);
       try {
@@ -71,6 +71,7 @@ export default function AmazonNavbar() {
       } catch (error) {
         console.error('Invalid token:', error);
         sessionStorage.removeItem('accessToken');
+        localStorage.removeItem('accessToken');
         setIsSignedIn(false);
       }
     }
@@ -92,6 +93,7 @@ export default function AmazonNavbar() {
 
   const handleLogout = () => {
     sessionStorage.removeItem('accessToken');
+    localStorage.removeItem('accessToken');
     setIsSignedIn(false);
     setIsAdmin(false);
     router.push('/signin'); // Redirect to sign-in page

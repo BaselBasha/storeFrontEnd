@@ -9,7 +9,7 @@ export default function Admin() {
   const [isAuthorized, setIsAuthorized] = useState<null | boolean>(null);
 
   useEffect(() => {
-    const token = sessionStorage.getItem('accessToken');
+    const token = localStorage.getItem('accessToken');
     if (!token) {
       router.push('/signin');
       return;
