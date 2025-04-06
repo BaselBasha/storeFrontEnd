@@ -19,6 +19,9 @@ import {
   ChartOptions,
 } from 'chart.js';
 import Image from 'next/image';
+import OrdersChart from './dashboardTableComponents/ordersChart';
+import TopSellingProducts from './dashboardTableComponents/topSellingProducts';
+import UserGrowth from './dashboardTableComponents/userGrowth';
 
 // Register ChartJS components
 ChartJS.register(
@@ -181,67 +184,11 @@ export default function AdminDashboard() {
             <h1 className="text-2xl font-bold text-gray-900 mb-6">Dashboard</h1>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* 1. Orders by Days Chart */}
-              <div className="bg-white rounded-lg shadow p-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold text-gray-800">Orders by Day</h3>
-                  <select 
-                    className="text-sm border rounded p-1"
-                    value={timePeriod}
-                    onChange={(e) => setTimePeriod(e.target.value as TimePeriod)}
-                  >
-                    <option value="day">Day</option>
-                    <option value="week">Week</option>
-                    <option value="month">Month</option>
-                    <option value="3months">3 Months</option>
-                    <option value="year">Year</option>
-                  </select>
-                </div>
-                <div className="h-64">
-                  <Line data={ordersData} options={chartOptions} />
-                </div>
-              </div>
-
-              {/* 2. Top Selling Products Table */}
-              <div className="bg-white rounded-lg shadow p-4">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Top Selling Products</h3>
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-gray-500">
-                      <th className="text-left">Image</th>
-                      <th className="text-left">Name</th>
-                      <th className="text-left">Price</th>
-                      <th className="text-left">Sold</th>
-                      <th className="text-left">Stock</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>
-                        <Image
-                          src="/product1.jpg"
-                          alt="Product A"
-                          width={40} // w-10 = 40px
-                          height={40} // h-10 = 40px
-                          className="rounded"
-                        />
-                      </td>
-                      <td>Product A</td>
-                      <td>$29.99</td>
-                      <td>150</td>
-                      <td>50</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+              <OrdersChart />
+              <TopSellingProducts />
 
               {/* 3. Users Growth Chart */}
-              <div className="bg-white rounded-lg shadow p-4">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">User Growth</h3>
-                <div className="h-64">
-                  <Bar data={usersData} options={chartOptions} />
-                </div>
-              </div>
+              <UserGrowth />
 
               {/* 4. Top Countries Table */}
               <div className="bg-white rounded-lg shadow p-4">
