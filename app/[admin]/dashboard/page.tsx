@@ -22,6 +22,8 @@ import Image from 'next/image';
 import OrdersChart from './dashboardTableComponents/ordersChart';
 import TopSellingProducts from './dashboardTableComponents/topSellingProducts';
 import UserGrowth from './dashboardTableComponents/userGrowth';
+import ProfitGraph from './dashboardTableComponents/profitGraph';
+import OutOfStock from './dashboardTableComponents/outOfStock';
 
 // Register ChartJS components
 ChartJS.register(
@@ -186,8 +188,6 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <OrdersChart />
               <TopSellingProducts />
-
-              {/* 3. Users Growth Chart */}
               <UserGrowth />
 
               {/* 4. Top Countries Table */}
@@ -219,44 +219,9 @@ export default function AdminDashboard() {
                 </table>
               </div>
 
-              {/* 5. Profit Chart */}
-              <div className="bg-white rounded-lg shadow p-4 col-span-1 lg:col-span-2">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Profit Overview</h3>
-                <div className="h-64">
-                  <Bar data={profitData} options={chartOptions} />
-                </div>
-              </div>
+              <ProfitGraph />
+              <OutOfStock />
 
-              {/* 6. Out of Stock Products Table */}
-              <div className="bg-white rounded-lg shadow p-4 col-span-1 lg:col-span-2">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Out of Stock Products</h3>
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-gray-500">
-                      <th className="text-left">Image</th>
-                      <th className="text-left">Name</th>
-                      <th className="text-left">Price</th>
-                      <th className="text-left">Stock</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>
-                        <Image
-                          src="/product2.jpg"
-                          alt="Product B"
-                          width={40} // w-10 = 40px
-                          height={40} // h-10 = 40px
-                          className="rounded"
-                        />
-                      </td>
-                      <td>Product B</td>
-                      <td>$19.99</td>
-                      <td>0</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
 
               {/* 7. Orders Chart */}
               <div className="bg-white rounded-lg shadow p-4">
