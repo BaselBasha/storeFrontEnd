@@ -24,6 +24,7 @@ import TopSellingProducts from './dashboardTableComponents/topSellingProducts';
 import UserGrowth from './dashboardTableComponents/userGrowth';
 import ProfitGraph from './dashboardTableComponents/profitGraph';
 import OutOfStock from './dashboardTableComponents/outOfStock';
+import OrdersLineChart from './dashboardTableComponents/ordersLineChart';
 
 // Register ChartJS components
 ChartJS.register(
@@ -221,15 +222,8 @@ export default function AdminDashboard() {
 
               <ProfitGraph />
               <OutOfStock />
+              <OrdersLineChart />
 
-
-              {/* 7. Orders Chart */}
-              <div className="bg-white rounded-lg shadow p-4">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Orders Overview</h3>
-                <div className="h-64">
-                  <Line data={ordersData} options={chartOptions} />
-                </div>
-              </div>
             </div>
           </div>
         </div>
