@@ -14,6 +14,8 @@ import {
   IconTrash,  // For Delete
   IconPencil, // For Update
   IconEye,    // For Show All
+  IconUsers,
+  IconShoppingCart
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -51,6 +53,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ initialOpen = false }) => {
       ),
     },
     {
+      label: "Users",
+      href: "/admin/users",
+      icon: (
+        <IconUsers className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
+      label: "Orders",
+      href: "/admin/orders",
+      icon: (
+        <IconShoppingCart className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
       label: "Settings",
       href: "/admin/settings",
       icon: (
@@ -58,6 +74,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ initialOpen = false }) => {
       ),
     },
   ];
+  
 
   // Logout link defined separately
   const logoutLink: Link = {
