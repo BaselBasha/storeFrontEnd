@@ -14,10 +14,6 @@ export default function Home() {
   return (
     <Layout>
       <HeroSection />
-      <MonitorList />
-      <LaptopsList />
-      <GpuList />
-      <PrebuiltPcList />
     </Layout>
   );
 }

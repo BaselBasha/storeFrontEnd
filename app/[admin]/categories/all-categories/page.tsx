@@ -10,7 +10,7 @@ import Link from 'next/link';
 
 // Centralized state (simple in-memory cache)
 let cachedData = {
-  categories: [] as Category[],
+  allItems: [] as Category[],
   fetched: false,
 };
 
@@ -21,39 +21,55 @@ interface Category {
   imageUrl?: string | null;
   createdAt: string;
   updatedAt: string;
+  parentId?: string; // Optional field to identify subcategories
 }
 
 function AllCategories() {
-  const [categories, setCategories] = useState<Category[]>(cachedData.categories);
+  const [allItems, setAllItems] = useState<Category[]>(cachedData.allItems);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [subcategories, setSubcategories] = useState<Category[]>([]);
   const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
+  const [filteredSubcategories, setFilteredSubcategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState<boolean>(!cachedData.fetched);
   const [error, setError] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState<boolean>(false);
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [categorySearchTerm, setCategorySearchTerm] = useState<string>('');
+  const [subcategorySearchTerm, setSubcategorySearchTerm] = useState<string>('');
 
   useEffect(() => {
     setHydrated(true);
 
     if (cachedData.fetched) {
-      setCategories(cachedData.categories);
-      setFilteredCategories(cachedData.categories);
+      setAllItems(cachedData.allItems);
+      const cats = cachedData.allItems.filter(item => !item.parentId);
+      const subs = cachedData.allItems.filter(item => item.parentId);
+      setCategories(cats);
+      setSubcategories(subs);
+      setFilteredCategories(cats);
+      setFilteredSubcategories(subs);
       setLoading(false);
       return;
     }
 
     const fetchData = async () => {
       try {
-        const categoriesResponse = await fetch('http://localhost:4000/categories');
-        if (!categoriesResponse.ok) throw new Error('Failed to fetch categories');
-        const categoriesData: Category[] = await categoriesResponse.json();
+        const response = await fetch('http://localhost:4000/categories');
+        if (!response.ok) throw new Error('Failed to fetch categories');
+        const data: Category[] = await response.json();
 
         cachedData = {
-          categories: categoriesData,
+          allItems: data,
           fetched: true,
         };
 
-        setCategories(categoriesData);
-        setFilteredCategories(categoriesData);
+        const cats = data.filter(item => !item.parentId);
+        const subs = data.filter(item => item.parentId);
+
+        setAllItems(data);
+        setCategories(cats);
+        setSubcategories(subs);
+        setFilteredCategories(cats);
+        setFilteredSubcategories(subs);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -64,21 +80,35 @@ function AllCategories() {
     fetchData();
   }, []);
 
-  // Handle search input change
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle category search
+  const handleCategorySearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.toLowerCase();
-    setSearchTerm(value);
+    setCategorySearchTerm(value);
     const filtered = categories.filter((category) =>
       category.name.toLowerCase().includes(value)
     );
     setFilteredCategories(filtered);
   };
 
-  const recentlyAdded = [...categories]
+  // Handle subcategory search
+  const handleSubcategorySearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.toLowerCase();
+    setSubcategorySearchTerm(value);
+    const filtered = subcategories.filter((subcategory) =>
+      subcategory.name.toLowerCase().includes(value)
+    );
+    setFilteredSubcategories(filtered);
+  };
+
+  const recentlyAddedCategories = [...categories]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 5);
 
-  // Explicitly type tableColumns as TableColumnsType<Category>
+  const recentlyAddedSubcategories = [...subcategories]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 5);
+
+  // Table columns for both categories and subcategories
   const tableColumns: TableColumnsType<Category> = [
     {
       title: 'Image',
@@ -125,13 +155,13 @@ function AllCategories() {
     },
   ];
 
-  const CategoryCard = ({ category }: { category: Category }) => (
-    <Link href={`/admin/categories/${category.id}`}>
+  const CategoryCard = ({ item, isSubcategory }: { item: Category; isSubcategory: boolean }) => (
+    <Link href={`/admin/categories/${item.id}`}>
       <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-200 cursor-pointer w-48">
-        {category.imageUrl ? (
+        {item.imageUrl ? (
           <AntImage
-            src={category.imageUrl}
-            alt={category.name}
+            src={item.imageUrl}
+            alt={item.name}
             width={192}
             height={128}
             className="w-full h-32 object-cover"
@@ -142,13 +172,17 @@ function AllCategories() {
           </div>
         )}
         <div className="p-2 text-center">
-          <h3 className="text-sm font-semibold text-gray-800">{category.name}</h3>
+          <h3 className="text-sm font-semibold text-gray-800">{item.name}</h3>
+          {isSubcategory && item.parentId && (
+            <p className="text-xs text-gray-500">
+              Parent: {categories.find(c => c.id === item.parentId)?.name || 'Unknown'}
+            </p>
+          )}
         </div>
       </div>
     </Link>
   );
 
-  // Custom loading spinner
   const customLoadingIcon = (
     <LoadingOutlined style={{ fontSize: 48, color: '#1890ff' }} spin />
   );
@@ -181,12 +215,12 @@ function AllCategories() {
 
             {!error && (
               <div className="space-y-12">
-                {/* Recently Added Categories Table */}
+                {/* Recently Added Categories */}
                 <div>
                   <h2 className="text-xl font-semibold text-gray-800 mb-4">Recently Added Categories</h2>
                   <Table
                     columns={tableColumns}
-                    dataSource={recentlyAdded}
+                    dataSource={recentlyAddedCategories}
                     rowKey="id"
                     pagination={false}
                     bordered
@@ -195,21 +229,58 @@ function AllCategories() {
                   />
                 </div>
 
-                {/* All Categories Table with Search Bar */}
+                {/* Recently Added Subcategories */}
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-800 mb-4">Recently Added Subcategories</h2>
+                  <Table
+                    columns={tableColumns}
+                    dataSource={recentlyAddedSubcategories}
+                    rowKey="id"
+                    pagination={false}
+                    bordered
+                    size="middle"
+                    scroll={{ x: 'max-content' }}
+                  />
+                </div>
+
+                {/* All Categories */}
                 <div>
                   <h2 className="text-xl font-semibold text-gray-800 mb-4">All Categories</h2>
                   <Space direction="vertical" style={{ width: '100%', marginBottom: 16 }}>
                     <Input
                       placeholder="Search by category name"
                       prefix={<SearchOutlined />}
-                      value={searchTerm}
-                      onChange={handleSearch}
+                      value={categorySearchTerm}
+                      onChange={handleCategorySearch}
                       style={{ width: 200 }}
                     />
                   </Space>
                   <Table
                     columns={tableColumns}
                     dataSource={filteredCategories}
+                    rowKey="id"
+                    pagination={{ pageSize: 10, showSizeChanger: true }}
+                    bordered
+                    size="middle"
+                    scroll={{ x: 'max-content' }}
+                  />
+                </div>
+
+                {/* All Subcategories */}
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-800 mb-4">All Subcategories</h2>
+                  <Space direction="vertical" style={{ width: '100%', marginBottom: 16 }}>
+                    <Input
+                      placeholder="Search by subcategory name"
+                      prefix={<SearchOutlined />}
+                      value={subcategorySearchTerm}
+                      onChange={handleSubcategorySearch}
+                      style={{ width: 200 }}
+                    />
+                  </Space>
+                  <Table
+                    columns={tableColumns}
+                    dataSource={filteredSubcategories}
                     rowKey="id"
                     pagination={{ pageSize: 10, showSizeChanger: true }}
                     bordered
@@ -226,7 +297,21 @@ function AllCategories() {
                   ) : (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                       {categories.map((category) => (
-                        <CategoryCard key={category.id} category={category} />
+                        <CategoryCard key={category.id} item={category} isSubcategory={false} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Subcategories Grid */}
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-800 mb-4">Subcategories Overview</h2>
+                  {subcategories.length === 0 ? (
+                    <p className="text-gray-500">No subcategories found.</p>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                      {subcategories.map((subcategory) => (
+                        <CategoryCard key={subcategory.id} item={subcategory} isSubcategory={true} />
                       ))}
                     </div>
                   )}
