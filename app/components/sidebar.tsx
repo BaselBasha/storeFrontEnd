@@ -15,7 +15,8 @@ import {
   IconPencil, // For Update
   IconEye,    // For Show All
   IconUsers,
-  IconShoppingCart
+  IconShoppingCart,
+  IconCopyPlusFilled
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -88,6 +89,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ initialOpen = false }) => {
   // Dropdown items for Category and Product
   const categoryDropdown = [
     { label: "Add New Category", href: "/admin/categories/add-category", icon: <IconPlus className="h-4 w-4" /> },
+    { label: "Add New Subcategory", href: "/admin/categories/add-subcategory", icon: <IconCopyPlusFilled className="h-4 w-4" /> },
     { label: "Delete Category", href: "/admin/categories/delete-category", icon: <IconTrash className="h-4 w-4" /> },
     { label: "Update Category", href: "/admin/categories/edit-category", icon: <IconPencil className="h-4 w-4" /> },
     { label: "Show All Categories", href: "/admin/categories/all-categories", icon: <IconEye className="h-4 w-4" /> },

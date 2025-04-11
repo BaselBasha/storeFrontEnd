@@ -1,16 +1,27 @@
 'use client';
 
-import ProtectedAdmin from '@/app/components/ProtectedAdmin'; // Double-check this path
+import ProtectedAdmin from '@/app/components/ProtectedAdmin';
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from '@/app/components/sidebar';
 import { cn } from '@/lib/utils';
-import { Form, Input, InputNumber, Button, message, Select } from 'antd';
+import { Form, Input, InputNumber, Button, message, TreeSelect } from 'antd';
 import TextArea from 'antd/es/input/TextArea';
 import Image from 'next/image';
+import axios, { AxiosResponse } from 'axios';
 
 interface Category {
   value: string;
-  label: string;
+  title: string;
+  parentId?: string | null;
+  children?: Category[];
+  disabled?: boolean;
+  style?: React.CSSProperties;
+}
+
+interface RawCategory {
+  id: string;
+  name: string;
+  parentId?: string;
 }
 
 interface ProductFormValues {
@@ -23,24 +34,60 @@ interface ProductFormValues {
   imageUrl: string;
 }
 
+interface ImageUploadResponse {
+  url: string;
+}
+
 export default function AddProduct() {
   const [form] = Form.useForm<ProductFormValues>();
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [submitting, setSubmitting] = useState<boolean>(false);
+  const [isClient, setIsClient] = useState<boolean>(false);
 
   useEffect(() => {
+    setIsClient(true);
+
     const fetchCategories = async () => {
       try {
-        const response = await fetch('http://localhost:4000/categories');
-        if (!response.ok) throw new Error('Failed to fetch categories');
-        const data: { id: string; name: string }[] = await response.json();
-        const formattedCategories: Category[] = data.map(category => ({
-          value: category.id,
-          label: category.name,
-        }));
-        setCategories(formattedCategories);
+        const response: AxiosResponse<RawCategory[]> = await axios.get('http://localhost:4000/categories');
+        const data: RawCategory[] = response.data;
+
+        const categoryMap = new Map<string, Category>();
+        const tree: Category[] = [];
+
+        // First pass: Create category nodes
+        data.forEach((category) => {
+          categoryMap.set(category.id, {
+            value: category.id,
+            title: category.name,
+            parentId: category.parentId,
+            children: [],
+            disabled: !category.parentId,
+          });
+        });
+
+        // Second pass: Build the tree
+        categoryMap.forEach((category) => {
+          if (category.parentId) {
+            const parent = categoryMap.get(category.parentId);
+            if (parent) {
+              parent.children = parent.children || [];
+              parent.children.push(category);
+            }
+          } else {
+            tree.push(category);
+          }
+        });
+
+        // Third pass: Add padding-bottom to the last main category
+        if (tree.length > 0) {
+          const lastMainCategory = tree[tree.length - 1]; // Last main category (e.g., "Accessories")
+          lastMainCategory.style = { paddingBottom: '16px' }; // Add padding-bottom only
+        }
+
+        setCategories(tree);
       } catch (error) {
         console.error('Error fetching categories:', error);
         message.error('Failed to load categories');
@@ -50,25 +97,23 @@ export default function AddProduct() {
     fetchCategories();
   }, []);
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     const file = event.target.files?.[0];
     if (!file) {
       message.error('No file selected');
       return;
     }
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       message.error('Invalid image format. Please upload a PNG, JPG, or GIF.');
       return;
     }
 
-    // Set the file for upload and create a preview
     setImageFile(file);
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => {
-      setImagePreview(reader.result as string); // For preview only
+      setImagePreview(reader.result as string);
     };
     reader.onerror = (error) => {
       console.error('Error generating preview:', error);
@@ -76,7 +121,7 @@ export default function AddProduct() {
     };
   };
 
-  const onFinish = async (values: ProductFormValues) => {
+  const onFinish = async (values: ProductFormValues): Promise<void> => {
     if (!imageFile) {
       message.error('Please upload an image');
       return;
@@ -89,21 +134,19 @@ export default function AddProduct() {
       const formData = new FormData();
       formData.append('file', imageFile);
 
-      const uploadResponse = await fetch('http://localhost:4000/images/upload', {
-        method: 'POST',
-        body: formData,
-      });
+      const uploadResponse: AxiosResponse<ImageUploadResponse> = await axios.post(
+        'http://localhost:4000/images/upload',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      const imageUrl: string = uploadResponse.data.url;
 
-      if (!uploadResponse.ok) {
-        const errorText = await uploadResponse.text();
-        throw new Error(`Image upload failed: ${errorText}`);
-      }
-
-      const uploadData = await uploadResponse.json();
-      const imageUrl = uploadData.url; // Cloudinary URL from backend
-
-      // Step 2: Prepare product data with the Cloudinary URL
-      let specificationsObj = {};
+      // Step 2: Prepare product data
+      let specificationsObj: Record<string, any> = {};
       if (values.specifications) {
         try {
           specificationsObj = JSON.parse(values.specifications);
@@ -117,20 +160,15 @@ export default function AddProduct() {
       const productData = {
         ...values,
         specifications: values.specifications ? specificationsObj : undefined,
-        imageUrl: imageUrl, // Use Cloudinary URL instead of Base64
+        imageUrl: imageUrl,
       };
 
       // Step 3: Submit product data to backend
-      const response = await fetch('http://localhost:4000/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(productData),
+      await axios.post('http://localhost:4000/products', productData, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to add product: ${errorText}`);
-      }
 
       message.success('Product added successfully!');
       form.resetFields();
@@ -144,15 +182,29 @@ export default function AddProduct() {
     }
   };
 
+  if (!isClient) {
+    return (
+      <ProtectedAdmin>
+        <div className={cn('flex flex-col md:flex-row h-screen w-full mx-auto')}>
+          <Sidebar initialOpen={false} />
+          <div className="flex-1 p-4 bg-gray-50 overflow-auto">
+            <div className="max-w-2xl mx-auto">
+              <h1 className="text-xl font-bold text-gray-900 mb-4">Add Product</h1>
+              <p>Loading...</p>
+            </div>
+          </div>
+        </div>
+      </ProtectedAdmin>
+    );
+  }
+
   return (
     <ProtectedAdmin>
-      <div className={cn("flex flex-col md:flex-row h-screen w-full mx-auto")}>
+      <div className={cn('flex flex-col md:flex-row h-screen w-full mx-auto')}>
         <Sidebar initialOpen={false} />
-        
         <div className="flex-1 p-4 bg-gray-50 overflow-auto">
           <div className="max-w-2xl mx-auto">
             <h1 className="text-xl font-bold text-gray-900 mb-4">Add Product</h1>
-            
             <Form
               form={form}
               onFinish={onFinish}
@@ -177,8 +229,8 @@ export default function AddProduct() {
                   size="middle"
                   min={0}
                   step={0.01}
-                  formatter={value => `$ ${value}`}
-                  parser={value => parseFloat(value?.replace('$ ', '') || '0')}
+                  formatter={(value) => `$ ${value}`}
+                  parser={(value) => parseFloat(value?.replace('$ ', '') || '0')}
                   style={{ width: '100%' }}
                 />
               </Form.Item>
@@ -194,12 +246,37 @@ export default function AddProduct() {
               <Form.Item
                 label="Category"
                 name="categoryId"
-                rules={[{ required: true, message: 'Please select a category' }]}
+                rules={[
+                  { required: true, message: 'Please select a subcategory' },
+                  {
+                    validator: async (_: any, value: string) => {
+                      if (!value) return Promise.reject('Please select a subcategory');
+                      const selectedCategory = categories
+                        .flatMap((c) => [c, ...(c.children || [])])
+                        .find((c) => c.value === value);
+                      if (!selectedCategory?.parentId) {
+                        return Promise.reject('Please select a subcategory, not a main category');
+                      }
+                      return Promise.resolve();
+                    },
+                  },
+                ]}
               >
-                <Select
+                <TreeSelect
                   size="middle"
-                  placeholder="Select category"
-                  options={categories}
+                  placeholder="Select subcategory"
+                  treeData={categories}
+                  showSearch
+                  dropdownStyle={{
+                    padding: '8px',
+                    paddingBottom: '24px',
+                    minHeight: '150px',
+                    maxHeight: '300px',
+                    overflow: 'auto',
+                  }}
+                  filterTreeNode={(input: string, node: any) =>
+                    node.title.toLowerCase().includes(input.toLowerCase())
+                  }
                 />
               </Form.Item>
 
@@ -219,17 +296,19 @@ export default function AddProduct() {
               <Form.Item
                 label="Specifications (JSON format, optional)"
                 name="specifications"
-                rules={[{
-                  validator: (_, value: string | undefined) => {
-                    if (!value) return Promise.resolve();
-                    try {
-                      JSON.parse(value);
-                      return Promise.resolve();
-                    } catch {
-                      return Promise.reject('Please enter valid JSON');
-                    }
+                rules={[
+                  {
+                    validator: (_: any, value?: string) => {
+                      if (!value) return Promise.resolve();
+                      try {
+                        JSON.parse(value);
+                        return Promise.resolve();
+                      } catch {
+                        return Promise.reject('Please enter valid JSON');
+                      }
+                    },
                   },
-                }]}
+                ]}
               >
                 <TextArea rows={3} placeholder='e.g., {"cpu": "Intel i7", "ram": "16GB"}' />
               </Form.Item>
@@ -240,11 +319,7 @@ export default function AddProduct() {
                 rules={[{ required: true, message: 'Please upload an image' }]}
               >
                 <div className="space-y-1">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                  />
+                  <input type="file" accept="image/*" onChange={handleImageChange} />
                   {imagePreview && (
                     <Image
                       src={imagePreview}

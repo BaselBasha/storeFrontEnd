@@ -3,32 +3,61 @@
 import React, { useState, useEffect } from 'react';
 import ProtectedAdmin from '@/app/components/ProtectedAdmin';
 import { Sidebar } from '@/app/components/sidebar';
-import { Table, Button, message, Image, Popconfirm, Space, Input, Spin, TableColumnsType } from 'antd';
+import {
+  Table,
+  Button,
+  message,
+  Image,
+  Popconfirm,
+  Space,
+  Input,
+  Spin,
+  TableColumnsType,
+  Card,
+  Typography,
+} from 'antd';
 import { useRouter } from 'next/navigation';
-import { PlusOutlined, SearchOutlined, LoadingOutlined } from '@ant-design/icons';
+import {
+  PlusOutlined,
+  SearchOutlined,
+  LoadingOutlined,
+  EditOutlined,
+  DeleteOutlined,
+} from '@ant-design/icons';
+import axios from 'axios';
+
+const { Title, Text } = Typography;
 
 interface Category {
   id: string;
   name: string;
-  description: string;
+  description?: string;
   imageUrl?: string | null;
+  parentId?: string | null;
 }
 
 export default function CategoryList() {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [mainCategories, setMainCategories] = useState<Category[]>([]);
+  const [subCategories, setSubCategories] = useState<Category[]>([]);
+  const [filteredMain, setFilteredMain] = useState<Category[]>([]);
+  const [filteredSub, setFilteredSub] = useState<Category[]>([]);
+  const [mainSearchTerm, setMainSearchTerm] = useState('');
+  const [subSearchTerm, setSubSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('http://localhost:4000/categories');
-        if (!response.ok) throw new Error('Failed to fetch categories');
-        const data: Category[] = await response.json();
+        const { data } = await axios.get<Category[]>('http://localhost:4000/categories');
+        const mains = data.filter((cat) => !cat.parentId);
+        const subs = data.filter((cat) => !!cat.parentId);
         setCategories(data);
-        setFilteredCategories(data);
+        setMainCategories(mains);
+        setSubCategories(subs);
+        setFilteredMain(mains);
+        setFilteredSub(subs);
       } catch (error) {
         console.error('Fetch error:', error);
         message.error('Failed to load categories');
@@ -40,39 +69,37 @@ export default function CategoryList() {
     fetchCategories();
   }, []);
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMainSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.toLowerCase();
-    setSearchTerm(value);
-    const filtered = categories.filter((category) =>
-      category.name.toLowerCase().includes(value)
+    setMainSearchTerm(value);
+    setFilteredMain(
+      mainCategories.filter((cat) => cat.name.toLowerCase().includes(value))
     );
-    setFilteredCategories(filtered);
+  };
+
+  const handleSubSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.toLowerCase();
+    setSubSearchTerm(value);
+    setFilteredSub(
+      subCategories.filter((cat) => cat.name.toLowerCase().includes(value))
+    );
   };
 
   const handleDelete = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:4000/categories/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to delete category: ${errorText}`);
-      }
-
-      const updatedCategories = categories.filter((category) => category.id !== id);
-      setCategories(updatedCategories);
-      setFilteredCategories(
-        filteredCategories.filter((category) => category.id !== id)
-      );
+      await axios.delete(`http://localhost:4000/categories/${id}`);
+      const updated = categories.filter((cat) => cat.id !== id);
+      const updatedMain = updated.filter((cat) => !cat.parentId);
+      const updatedSub = updated.filter((cat) => !!cat.parentId);
+      setCategories(updated);
+      setMainCategories(updatedMain);
+      setSubCategories(updatedSub);
+      setFilteredMain(updatedMain.filter((cat) => cat.name.toLowerCase().includes(mainSearchTerm)));
+      setFilteredSub(updatedSub.filter((cat) => cat.name.toLowerCase().includes(subSearchTerm)));
       message.success('Category deleted successfully');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Delete error:', error);
-      message.error(
-        `Failed to delete category: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`
-      );
+      message.error(`Failed to delete category: ${error?.response?.data || error.message}`);
     }
   };
 
@@ -84,37 +111,37 @@ export default function CategoryList() {
     router.push('/admin/categories/add-category');
   };
 
-  const columns: TableColumnsType<Category> = [
+  const getColumns = (): TableColumnsType<Category> => [
     {
       title: 'Image',
       dataIndex: 'imageUrl',
       key: 'imageUrl',
-      // Removed width: '10%' to let it fit the image content
+      width: '10%',
       render: (imageUrl: string | null) =>
         imageUrl ? (
           <Image
             src={imageUrl}
             alt="Category"
-            width={50}
-            height={50}
+            width={40}
+            height={40}
             style={{ objectFit: 'cover', borderRadius: '4px' }}
           />
         ) : (
-          <span className="text-gray-400">No Image</span>
+          <Text type="secondary">No Image</Text>
         ),
     },
     {
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
-      width: '25%',
+      width: '30%',
       ellipsis: true,
     },
     {
       title: 'Description',
       dataIndex: 'description',
       key: 'description',
-      width: '40%',
+      width: '45%',
       ellipsis: true,
       render: (text: string) => (
         <span
@@ -133,13 +160,19 @@ export default function CategoryList() {
     {
       title: 'Actions',
       key: 'actions',
-      width: '25%',
+      width: '15%',
       render: (_: any, record: Category) => (
-        <Space>
+        <Space size="small">
           <Button
-            type="primary"
+            type="text"
             size="small"
+            icon={<EditOutlined />}
             onClick={() => handleEdit(record.id)}
+            style={{
+              color: '#1890ff',
+              borderRadius: '4px',
+              padding: '4px 8px',
+            }}
           >
             Edit
           </Button>
@@ -149,7 +182,16 @@ export default function CategoryList() {
             okText="Yes"
             cancelText="No"
           >
-            <Button type="primary" danger size="small">
+            <Button
+              type="text"
+              danger
+              size="small"
+              icon={<DeleteOutlined />}
+              style={{
+                borderRadius: '4px',
+                padding: '4px 8px',
+              }}
+            >
               Delete
             </Button>
           </Popconfirm>
@@ -165,13 +207,15 @@ export default function CategoryList() {
   if (loading) {
     return (
       <ProtectedAdmin>
-        <div className="flex flex-col md:flex-row h-screen w-full mx-auto">
-          <Sidebar initialOpen={false} />
-          <div className="flex-1 p-6 bg-gray-100 overflow-auto flex items-center justify-center">
-            <div className="text-center">
+        <div className="flex flex-col md:flex-row h-screen w-full">
+          <Sidebar initialOpen={false}  />
+          <div className="flex-1 p-6 bg-[#f0f2f5] overflow-auto flex items-center justify-center">
+            <Card className="shadow-md p-8 text-center">
               <Spin indicator={customLoadingIcon} />
-              <p className="mt-4 text-lg text-gray-600">Loading Category List...</p>
-            </div>
+              <Text className="mt-4 block text-lg text-gray-600">
+                Loading Category List...
+              </Text>
+            </Card>
           </div>
         </div>
       </ProtectedAdmin>
@@ -180,45 +224,94 @@ export default function CategoryList() {
 
   return (
     <ProtectedAdmin>
-      <div className="flex flex-col md:flex-row h-screen w-full mx-auto">
-        <Sidebar initialOpen={false} />
-        <div className="flex-1 p-6 bg-gray-100 overflow-auto">
-          <div className="w-full mx-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-bold text-gray-800">Category List</h1>
+      <div className="flex flex-col md:flex-row h-screen w-full">
+        <Sidebar initialOpen={false}  />
+        <div className="flex-1 p-6 bg-[#f0f2f5] overflow-auto">
+          <Card className="mb-6 shadow-sm">
+            <Title level={3} className="text-gray-800">
+              Categories
+            </Title>
+          </Card>
+
+          {/* Main Categories */}
+          <Card className="mb-8 shadow-sm">
+            <div className="flex justify-between items-center mb-4">
+              <Title level={4} className="text-gray-700">
+                Main Categories
+              </Title>
               <Space>
                 <Input
-                  placeholder="Search by category name"
+                  placeholder="Search main categories"
                   prefix={<SearchOutlined />}
-                  value={searchTerm}
-                  onChange={handleSearch}
-                  style={{ width: 200 }}
+                  value={mainSearchTerm}
+                  onChange={handleMainSearch}
+                  style={{ width: 300 }}
+                  allowClear
                 />
                 <Button
                   type="primary"
+                  size="middle"
                   icon={<PlusOutlined />}
                   onClick={handleAddNew}
-                  style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
+                  style={{
+                    borderRadius: '4px',
+                  }}
                 >
-                  Add New Category
+                  Add New
                 </Button>
               </Space>
             </div>
-            <div className="overflow-x-auto w-full">
-              <Table
-                columns={columns}
-                dataSource={filteredCategories}
-                rowKey="id"
-                loading={loading}
-                pagination={{ pageSize: 10, showSizeChanger: true }}
-                bordered
-                size="middle"
-                className="shadow-sm rounded-lg w-full"
-                rowClassName="hover:bg-gray-50"
-                scroll={{ x: 'max-content' }}
-              />
+            <Table
+              columns={getColumns()}
+              dataSource={filteredMain}
+              rowKey="id"
+              pagination={{ pageSize: 5, showSizeChanger: false }}
+              bordered
+              size="middle"
+              className="rounded-lg"
+              rowClassName="hover:bg-gray-50"
+            />
+          </Card>
+
+          {/* Subcategories */}
+          <Card className="shadow-sm">
+            <div className="flex justify-between items-center mb-4">
+              <Title level={4} className="text-gray-700">
+                Subcategories
+              </Title>
+              <Space>
+                <Input
+                  placeholder="Search subcategories"
+                  prefix={<SearchOutlined />}
+                  value={subSearchTerm}
+                  onChange={handleSubSearch}
+                  style={{ width: 300 }}
+                  allowClear
+                />
+                <Button
+                  type="primary"
+                  size="middle"
+                  icon={<PlusOutlined />}
+                  onClick={() => router.push('/admin/categories/add-subcategory')}
+                  style={{
+                    borderRadius: '4px',
+                  }}
+                >
+                  Add New
+                </Button>
+              </Space>
             </div>
-          </div>
+            <Table
+              columns={getColumns()}
+              dataSource={filteredSub}
+              rowKey="id"
+              pagination={{ pageSize: 5, showSizeChanger: false }}
+              bordered
+              size="middle"
+              className="rounded-lg"
+              rowClassName="hover:bg-gray-50"
+            />
+          </Card>
         </div>
       </div>
     </ProtectedAdmin>
