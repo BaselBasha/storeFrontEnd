@@ -27,8 +27,10 @@ const dropdownContent: DropdownContent = {
     "Custom PC Builds",
   ],
   accessories: [
-    "Keyboards & Mice",
-    "Headsets & Microphones",
+    "Keyboards",
+    "Headsets",
+    "Microphones",
+    "Mouses",
     "Controllers",
     "Mousepads",
     "Streaming Gear",
