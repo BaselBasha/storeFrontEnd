@@ -2,9 +2,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { FaShoppingCart, FaSearch, FaBell, FaUser, FaBars, FaSignOutAlt, FaGamepad, FaLaptop, FaKeyboard, FaBoxOpen } from "react-icons/fa";
+import { FaShoppingCart, FaSearch, FaBell, FaUser, FaBars, FaSignOutAlt, FaGamepad, FaLaptop, FaKeyboard, FaBoxOpen, FaHeart } from "react-icons/fa";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
 
 type DropdownContent = Record<string, string[]>;
 type MenuItem = keyof typeof dropdownContent | "account";
@@ -213,6 +214,24 @@ export default function GamingStoreNavbar() {
                 <FaKeyboard className="mr-1" /> Dashboard
               </Link>
             )}
+            <div className="relative group">
+              <button
+                onClick={() => {
+                  if (!isSignedIn) {
+                    toast.error("You need to sign in to access your favorites.");
+                  } else {
+                    router.push("/favorite");
+                  }
+                }}
+                className="flex items-center text-white hover:text-red-500 transition-colors relative"
+              >
+                <FaHeart className="h-6 w-6" />
+              </button>
+              <span className="absolute bottom-full mb-1 left-1/2 transform -translate-x-1/2 px-2 py-1 text-xs rounded bg-black text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                Favorites
+              </span>
+            </div>
+
             <button
               onClick={handleCartClick}
               className="flex items-center text-white hover:text-red-500 transition-colors relative"
@@ -295,6 +314,20 @@ export default function GamingStoreNavbar() {
                   <Link href="/orders" className="text-gray-300 hover:text-red-500 transition-colors flex items-center">
                     <FaBoxOpen className="mr-2" /> Orders
                   </Link>
+                  <Link
+                    href="/favorite"
+                    onClick={(e) => {
+                      if (!isSignedIn) {
+                        e.preventDefault();
+                        toast.error("You need to sign in to access your favorites.");
+                        router.push("/signin");
+                      }
+                    }}
+                    className="text-gray-300 hover:text-red-500 transition-colors flex items-center"
+                  >
+                    <FaHeart className="mr-2" /> Favorites
+                  </Link>
+
                   <button
                     onClick={handleLogout}
                     className="text-gray-300 hover:text-red-500 transition-colors text-left flex items-center"
