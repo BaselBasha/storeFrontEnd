@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import axios from 'axios';
 import Layout from '@/app/components/Layout';
+import { useAddToCart } from '@/app/hooks/useAddToCart';
 import {
   Card,
   Tag,
@@ -17,7 +18,7 @@ import {
   Input,
   message,
 } from 'antd';
-import { HeartFilled, HeartOutlined } from '@ant-design/icons';
+import { HeartFilled, HeartOutlined, ShoppingCartOutlined, ShoppingOutlined } from '@ant-design/icons';
 
 const { Meta } = Card;
 const { Text, Title } = Typography;
@@ -68,6 +69,10 @@ const PcsItems: React.FC = () => {
   const [brandFilter, setBrandFilter] = useState<string | undefined>();
   const [processorFilter, setProcessorFilter] = useState<string | undefined>();
   const [featureFilter, setFeatureFilter] = useState<string | undefined>();
+
+  // Hook for adding to cart
+  const { handleAddToCart, cartLoadingId } = useAddToCart();
+
 
   const formattedPcItem =
     typeof pcItem === 'string' ? pcItem.replace(/-/g, ' ') : '';
@@ -159,6 +164,7 @@ const PcsItems: React.FC = () => {
 
     fetchProducts();
     fetchFavorites();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formattedPcItem]);
 
   useEffect(() => {
@@ -212,6 +218,17 @@ const PcsItems: React.FC = () => {
 
     setFilteredProducts(updated);
   }, [sortOption, searchTerm, brandFilter, processorFilter, featureFilter, products]);
+
+
+  const handleBuyNow = (productId: string) => {
+    if (!checkLoginStatus()) {
+      message.error('Please log in to proceed with the purchase.');
+      return;
+    }
+  
+    // TODO: Implement actual "Buy Now" logic
+    message.success('Redirecting to checkout...');
+  };  
 
   return (
     <Layout>
@@ -345,12 +362,25 @@ const PcsItems: React.FC = () => {
                           {product.description || 'No description available.'}
                         </Text>
                         <div className="flex justify-between gap-2">
-                          <Button type="default" block>
-                            Add to Cart
-                          </Button>
-                          <Button type="primary" block>
-                            Buy Now
-                          </Button>
+                        <Button
+                          type="default"
+                          icon={<ShoppingCartOutlined />}
+                          block
+                          loading={cartLoadingId === product.id}
+                          onClick={() => handleAddToCart(product.id)}
+                        >
+                          Add to Cart
+                        </Button>
+
+                        <Button
+                          type="primary"
+                          icon={<ShoppingOutlined />}
+                          block
+                          onClick={() => handleBuyNow(product.id)}
+                        >
+                          Buy Now
+                        </Button>
+
                         </div>
                       </>
                     }

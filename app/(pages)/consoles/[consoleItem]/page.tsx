@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import axios from 'axios';
 import Layout from '@/app/components/Layout';
+import { useAddToCart } from '@/app/hooks/useAddToCart';
 import {
   Card,
   Tag,
@@ -20,6 +21,9 @@ import {
 import {
   HeartOutlined,
   HeartFilled,
+  ShoppingCartOutlined,
+  ShoppingOutlined,
+
 } from '@ant-design/icons';
 
 const { Meta } = Card;
@@ -69,6 +73,10 @@ const ConsoleItem: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [colorFilter, setColorFilter] = useState<string | undefined>();
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
+
+  //data fetching endpoint hooks
+
+  const { handleAddToCart, cartLoadingId } = useAddToCart();
 
   const checkLoginStatus = () => {
     return !!localStorage.getItem('accessToken');
@@ -208,6 +216,17 @@ const ConsoleItem: React.FC = () => {
     setFilteredProducts(updated);
   }, [sortOption, searchTerm, colorFilter, products]);
 
+  const handleBuyNow = (productId: string) => {
+    if (!checkLoginStatus()) {
+      message.error('Please log in to proceed with the purchase.');
+      return;
+    }
+  
+    // TODO: Implement actual "Buy Now" logic
+    message.success('Redirecting to checkout...');
+  };
+  
+
   return (
     <Layout>
       <div className="p-6">
@@ -336,10 +355,21 @@ const ConsoleItem: React.FC = () => {
                           {product.description || 'No description available.'}
                         </Text>
                         <div className="flex justify-between gap-2">
-                          <Button type="default" block>
+                        <Button
+                            type="primary"
+                            block
+                            icon={<ShoppingCartOutlined />}
+                            loading={cartLoadingId === product.id}
+                            onClick={() => handleAddToCart(product.id)}
+                          >
                             Add to Cart
                           </Button>
-                          <Button type="primary" block>
+                          <Button
+                            type="default"
+                            block
+                            icon={<ShoppingOutlined />}
+                            onClick={() => handleBuyNow(product.id)}
+                          >
                             Buy Now
                           </Button>
                         </div>

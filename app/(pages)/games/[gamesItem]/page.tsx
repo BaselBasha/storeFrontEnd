@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import axios from 'axios';
 import Layout from '@/app/components/Layout';
+import { useAddToCart } from '@/app/hooks/useAddToCart';
 import {
   Card,
   Tag,
@@ -208,6 +209,20 @@ const GamesItem: React.FC = () => {
     setFilteredProducts(updated);
   }, [sortOption, searchTerm, genreFilter, platformFilter, products, formattedGamesItem]);
 
+
+  const { handleAddToCart, cartLoadingId } = useAddToCart();
+  
+  const handleBuyNow = (productId: string) => {
+    if (!checkLoginStatus()) {
+      message.error('Please log in to proceed with the purchase.');
+      return;
+    }
+  
+    // TODO: Implement actual "Buy Now" logic
+    message.success('Redirecting to checkout...');
+  };
+  
+
   return (
     <Layout>
       <div className="p-6">
@@ -349,16 +364,19 @@ const GamesItem: React.FC = () => {
                         </Text>
                         <div className="flex justify-between gap-2">
                           <Button
-                            type="default"
-                            icon={<ShoppingCartOutlined />}
+                            type="primary"
                             block
+                            icon={<ShoppingCartOutlined />}
+                            loading={cartLoadingId === product.id}
+                            onClick={() => handleAddToCart(product.id)}
                           >
                             Add to Cart
                           </Button>
                           <Button
-                            type="primary"
-                            icon={<ShoppingOutlined />}
+                            type="default"
                             block
+                            icon={<ShoppingOutlined />}
+                            onClick={() => handleBuyNow(product.id)}
                           >
                             Buy Now
                           </Button>

@@ -16,6 +16,7 @@ import axios from "axios";
 import Link from "next/link";
 import Image from "next/image";
 import Layout from "@/app/components/Layout";
+import { useAddToCart } from "@/app/hooks/useAddToCart";
 
 const { Title, Text } = Typography;
 
@@ -60,6 +61,10 @@ const Pcs: React.FC = () => {
   const [isMounted, setIsMounted] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
+  // handle add to cart hook
+  const { handleAddToCart, cartLoadingId } = useAddToCart();
+
+
   const checkLoginStatus = () => {
     return !!localStorage.getItem("accessToken");
   };
@@ -102,15 +107,6 @@ const Pcs: React.FC = () => {
       console.error("Error toggling favorite:", error);
       message.error("Something went wrong while updating favorites.");
     }
-  };
-
-  const handleAddToCart = (productId: string) => {
-    if (!checkLoginStatus()) {
-      message.error("Please log in to add items to your cart.");
-      return;
-    }
-    console.log(`Added product ${productId} to cart`);
-    // Add your cart logic here (e.g., update cart state, API call)
   };
 
   useEffect(() => {
@@ -265,6 +261,7 @@ const Pcs: React.FC = () => {
                           <Button
                             type="primary"
                             block
+                            loading={cartLoadingId === product.id}
                             onClick={() => handleAddToCart(product.id)}
                             style={{ marginTop: 8 }}
                           >

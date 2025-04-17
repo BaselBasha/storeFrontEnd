@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { FaShoppingCart, FaSearch, FaBell, FaUser, FaBars, FaSignOutAlt, FaGamepad, FaLaptop, FaKeyboard, FaBoxOpen, FaHeart } from "react-icons/fa";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useCart } from "@/app/context/CardContext";
 
 
 type DropdownContent = Record<string, string[]>;
@@ -46,6 +47,8 @@ export default function GamingStoreNavbar() {
   const [hideTimeout, setHideTimeout] = useState<NodeJS.Timeout | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(false);
+  const { cartCount } = useCart();
+  
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
@@ -237,7 +240,7 @@ export default function GamingStoreNavbar() {
               className="flex items-center text-white hover:text-red-500 transition-colors relative"
             >
               <FaShoppingCart className="h-6 w-6" />
-              <span className="ml-1 font-bold">0</span>
+              <span className="ml-1 font-bold">{cartCount}</span>
             </button>
             <Link href="/notifications" className="relative text-white hover:text-red-500 transition-colors">
               <FaBell className="h-6 w-6" />

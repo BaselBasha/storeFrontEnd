@@ -16,6 +16,7 @@ import axios from "axios";
 import Link from "next/link";
 import Image from "next/image";
 import Layout from "@/app/components/Layout";
+import { useAddToCart } from "@/app/hooks/useAddToCart";
 
 const { Title, Text } = Typography;
 
@@ -104,15 +105,6 @@ const Consoles: React.FC = () => {
     }
   };
 
-  const handleAddToCart = (productId: string) => {
-    if (!checkLoginStatus()) {
-      message.error("Please log in to add items to your cart.");
-      return;
-    }
-    console.log(`Added product ${productId} to cart`);
-    // Add your cart logic here (e.g., update cart state, API call)
-  };
-
   useEffect(() => {
     setIsMounted(true);
 
@@ -162,6 +154,8 @@ const Consoles: React.FC = () => {
     fetchSubcategoriesAndProducts();
     fetchFavorites();
   }, []);
+
+  const { handleAddToCart, cartLoadingId } = useAddToCart();
 
   if (!isMounted || loading) {
     return (
@@ -270,6 +264,7 @@ const Consoles: React.FC = () => {
                           <Button
                             type="primary"
                             block
+                            loading={cartLoadingId === product.id}
                             onClick={() => handleAddToCart(product.id)}
                             style={{ marginTop: 8 }}
                           >

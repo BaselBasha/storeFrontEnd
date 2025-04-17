@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import '@ant-design/v5-patch-for-react-19';
+import { CartProvider } from "./context/CardContext";
 const inter = Inter({ subsets: ["latin"] });
-import { CartProvider } from "@/app/context/CardContext"; // Ensure this is the correct path
 
 
 
@@ -25,8 +25,7 @@ export default function RootLayout({
         
         {children}
       </body>
-      </CartProvider>
-
+</CartProvider>
     </html>
   );
 }
