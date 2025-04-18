@@ -85,6 +85,7 @@ export default function GamingStoreNavbar() {
   const handleLogout = () => {
     sessionStorage.removeItem("accessToken");
     localStorage.removeItem("accessToken");
+    localStorage.removeItem('cartCount');
     setIsSignedIn(false);
     setIsAdmin(false);
     router.push("/signin");
