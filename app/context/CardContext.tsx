@@ -11,44 +11,36 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-  // Initialize cartCount from localStorage, default to 0 if not present
-  const [cartCount, setCartCount] = useState<number>(() => {
-    const storedCount = localStorage.getItem('cartCount');
-    return storedCount ? parseInt(storedCount, 10) : 0;
-  });
-
-  // Update localStorage whenever cartCount changes
-  useEffect(() => {
-    localStorage.setItem('cartCount', cartCount.toString());
-  }, [cartCount]);
+  // Initialize cartCount, default to 0
+  const [cartCount, setCartCount] = useState<number>(0);
 
   // Sync cart count with database
   const syncCartWithDB = async () => {
     try {
       const response = await axiosWithAuth.get('/cart');
-      const dbCartCount = response.data.items.length; // Adjust based on your API response
+      const dbCartCount = response.data.items.length; // Use items array from backend response
       setCartCount(dbCartCount);
     } catch (error) {
       console.error('Error fetching cart count:', error);
+      setCartCount(0);
     }
   };
 
   // Handle token changes and initial token state
   useEffect(() => {
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'accessToken') {
-        if (!event.newValue) {
-          // Token was removed (sign-out)
-          setCartCount(0);
-          localStorage.removeItem('cartCount');
-        } else {
-          // Token was added (sign-in)
-          syncCartWithDB();
-        }
+    const handleAuthChange = (event: Event) => {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        // Token was removed (sign-out)
+        setCartCount(0);
+      } else {
+        // Token was added or updated (sign-in)
+        syncCartWithDB();
       }
     };
 
-    window.addEventListener('storage', handleStorageChange);
+    // Listen for custom authChange event
+    window.addEventListener('authChange', handleAuthChange);
 
     // Check initial token state
     const token = localStorage.getItem('accessToken');
@@ -56,22 +48,21 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       syncCartWithDB();
     } else {
       setCartCount(0);
-      localStorage.removeItem('cartCount');
     }
 
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []); // Empty dependency array ensures this runs only on mount/unmount
+    return () => window.removeEventListener('authChange', handleAuthChange);
+  }, []);
 
   const incrementCartCount = () => {
     setCartCount((prev) => prev + 1);
     // Optionally sync with DB after increment
-    // axiosWithAuth.post('/cart', { itemId }).catch((err) => console.error(err));
+    // axiosWithAuth.post('/cart/add', { productId }).catch((err) => console.error(err));
   };
 
   const decrementCartCount = () => {
     setCartCount((prev) => (prev > 0 ? prev - 1 : 0));
     // Optionally sync with DB after decrement
-    // axiosWithAuth.delete('/cart/itemId').catch((err) => console.error(err));
+    // axiosWithAuth.delete('/cart/productId').catch((err) => console.error(err));
   };
 
   return (

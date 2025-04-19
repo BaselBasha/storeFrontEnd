@@ -54,12 +54,14 @@ const SignUpForm: React.FC = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
-
+  
       if (response.ok) {
         const data = await response.json();
         const token = data.access_token;
         if (token) {
           localStorage.setItem("accessToken", token);
+          // Dispatch custom authChange event
+          window.dispatchEvent(new Event('authChange'));
           const decodedToken = JSON.parse(atob(token.split(".")[1]));
           Modal.success({
             title: decodedToken.role === "ADMIN" ? "Welcome Back, Admin" : "Login Successful",
@@ -83,7 +85,7 @@ const SignUpForm: React.FC = () => {
       } else {
         const errorData = await response.json();
         console.log('Error Data:', errorData);
-
+  
         if (response.status === 401) {
           const errorMessage = errorData.message;
           if (typeof errorMessage === 'object' && errorMessage !== null) {
