@@ -16,8 +16,14 @@ import {
   Space,
   Statistic,
   Divider,
+  InputNumber,
 } from "antd";
-import { ExclamationCircleOutlined, ShoppingCartOutlined } from "@ant-design/icons";
+import {
+  ExclamationCircleOutlined,
+  ShoppingCartOutlined,
+  MinusOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
 import axiosWithAuth from "@/app/lib/axiosWithAuth";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/app/context/CardContext";
@@ -25,8 +31,23 @@ import { useCart } from "@/app/context/CardContext";
 const { confirm } = Modal;
 const { Title, Text } = Typography;
 
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  stock: number;
+  imageUrl: string;
+  category: { name: string };
+}
+
+interface CartItem {
+  productId: string;
+  quantity: number;
+  product: Product;
+}
+
 const Cart = () => {
-  const [cartItems, setCartItems] = useState<any[]>([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { decrementCartCount } = useCart();
@@ -34,11 +55,11 @@ const Cart = () => {
   useEffect(() => {
     const fetchCartItems = async () => {
       try {
-        const res = await axiosWithAuth.get("/cart");
-        // Normalize data to ensure correct structure
-        const items = Array.isArray(res.data.items)
+        const res = await axiosWithAuth.get("http://localhost:4000/cart");
+        const items: CartItem[] = Array.isArray(res.data.items)
           ? res.data.items.filter((item: any) => item.product && typeof item.product === "object")
           : [];
+
         setCartItems(items);
       } catch (err) {
         console.error("Error fetching cart:", err);
@@ -50,6 +71,46 @@ const Cart = () => {
 
     fetchCartItems();
   }, []);
+
+  const updateQuantity = async (productId: string, quantity: number) => {
+    try {
+      await axiosWithAuth.post("http://localhost:4000/cart/update-quantity", {
+        productId,
+        quantity,
+      });
+
+      setCartItems((prev) =>
+        prev.map((item) =>
+          item.product.id === productId
+            ? {
+                ...item,
+                quantity: Math.min(quantity, item.product.stock || 10),
+              }
+            : item
+        )
+      );
+      message.success("Quantity updated successfully");
+    } catch (err) {
+      console.error("Error updating quantity:", err);
+      message.error("Failed to update quantity.");
+    }
+  };
+
+  const handleIncrement = (
+    productId: string,
+    currentQty: number,
+    max: number
+  ) => {
+    if (currentQty < max) {
+      updateQuantity(productId, currentQty + 1);
+    }
+  };
+
+  const handleDecrement = (productId: string, currentQty: number) => {
+    if (currentQty > 1) {
+      updateQuantity(productId, currentQty - 1);
+    }
+  };
 
   const removeFromCart = async (productId: string) => {
     confirm({
@@ -63,7 +124,9 @@ const Cart = () => {
         try {
           await axiosWithAuth.delete(`/cart/remove/${productId}`);
           message.success("Item removed from cart!");
-          setCartItems((prev) => prev.filter((item) => item.product.id !== productId));
+          setCartItems((prev) =>
+            prev.filter((item) => item.product.id !== productId)
+          );
           decrementCartCount();
         } catch (err) {
           console.error("Error removing item:", err);
@@ -81,8 +144,13 @@ const Cart = () => {
     router.push("/checkout");
   };
 
-  // Calculate total price
-  const totalPrice = cartItems.reduce((sum, { product }) => sum + (product.price || 0), 0).toFixed(2);
+  const totalPrice = cartItems
+    .reduce(
+      (sum, { product, quantity }) =>
+        sum + (product.price || 0) * (quantity || 1),
+      0
+    )
+    .toFixed(2);
 
   return (
     <Layout>
@@ -113,7 +181,6 @@ const Cart = () => {
           />
         ) : (
           <Row gutter={[24, 24]}>
-            {/* Cart Items */}
             <Col xs={24} lg={16}>
               <Row gutter={[24, 24]}>
                 {cartItems.map((item, index) => {
@@ -122,6 +189,7 @@ const Cart = () => {
                     console.warn("Invalid product data:", item);
                     return null;
                   }
+
                   return (
                     <Col xs={24} sm={12} key={product.id || index}>
                       <Card
@@ -129,7 +197,7 @@ const Cart = () => {
                         className="shadow-md"
                         cover={
                           <Image
-                            alt={product.name || "Product"}
+                            alt={product.name}
                             src={product.imageUrl || "/placeholder-image.jpg"}
                             className="h-48 object-cover w-full"
                             preview
@@ -137,14 +205,16 @@ const Cart = () => {
                         }
                         actions={[
                           <Button
-                            key={`${product.id}-specifications`}
+                            key="details"
                             type="link"
-                            onClick={() => router.push(`/product/${product.id}`)}
+                            onClick={() =>
+                              router.push(`/product/${product.id}`)
+                            }
                           >
                             View Details
                           </Button>,
                           <Button
-                            key={`${product.id}-remove`}
+                            key="remove"
                             type="text"
                             danger
                             onClick={() => removeFromCart(product.id)}
@@ -152,7 +222,7 @@ const Cart = () => {
                             Remove
                           </Button>,
                           <Button
-                            key={`${product.id}-buy`}
+                            key="buy"
                             type="primary"
                             onClick={() => handleBuySingle(product.id)}
                           >
@@ -161,18 +231,51 @@ const Cart = () => {
                         ]}
                       >
                         <Card.Meta
-                          title={<Text strong>{product.name || "Unknown Product"}</Text>}
+                          title={<Text strong>{product.name}</Text>}
                           description={
                             <Space direction="vertical">
                               <Text type="danger" strong>
-                                ${(product.price || 0).toFixed(2)}
+                                ${product.price?.toFixed(2)}
                               </Text>
                               <Text type="secondary">
-                                Category: {product.category.name || "N/A"}
+                                Category: {product.category.name}
                               </Text>
                               <Text type="secondary">
-                                In Stock: {product.stock || 0}
+                                In Stock: {product.stock}
                               </Text>
+                              <div className="flex items-center gap-2">
+                                <Text>Quantity:</Text>
+                                <Button
+                                  icon={<MinusOutlined />}
+                                  size="small"
+                                  onClick={() =>
+                                    handleDecrement(product.id, item.quantity)
+                                  }
+                                />
+                                <InputNumber
+                                  min={1}
+                                  max={product.stock || 10}
+                                  value={item.quantity}
+                                  onChange={(value) =>
+                                    updateQuantity(
+                                      product.id,
+                                      typeof value === "number" ? value : 1
+                                    )
+                                  }
+                                  size="small"
+                                />
+                                <Button
+                                  icon={<PlusOutlined />}
+                                  size="small"
+                                  onClick={() =>
+                                    handleIncrement(
+                                      product.id,
+                                      item.quantity,
+                                      product.stock || 10
+                                    )
+                                  }
+                                />
+                              </div>
                             </Space>
                           }
                         />
@@ -183,7 +286,6 @@ const Cart = () => {
               </Row>
             </Col>
 
-            {/* Cart Summary */}
             <Col xs={24} lg={8}>
               <Card
                 title={<Title level={4}>Cart Summary</Title>}
@@ -192,7 +294,10 @@ const Cart = () => {
                 <Space direction="vertical" size="middle" style={{ width: "100%" }}>
                   <Statistic
                     title="Total Items"
-                    value={cartItems.length}
+                    value={cartItems.reduce(
+                      (sum, item) => sum + (item.quantity || 1),
+                      0
+                    )}
                     prefix={<ShoppingCartOutlined />}
                   />
                   <Statistic
