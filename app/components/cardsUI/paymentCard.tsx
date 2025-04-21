@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   Button,
@@ -54,6 +54,8 @@ const PaymentCard: React.FC<Props> = ({
   paypalEmail,
   setPaypalEmail,
 }) => {
+  const [loading, setLoading] = useState(false); // Add loading state
+
   const validateCardDetails = () => {
     const { cardNumber, expiryDate, cvv } = cardDetails;
     const digitsOnly = cardNumber.replace(/\s/g, '');
@@ -94,10 +96,19 @@ const PaymentCard: React.FC<Props> = ({
     return true;
   };
 
-  const handlePaymentWithValidation = () => {
+  const handlePaymentWithValidation = async () => {
     if (paymentMethod === 'visa' && !validateCardDetails()) return;
     if (paymentMethod === 'paypal' && !validatePaypalEmail()) return;
-    handlePayment();
+
+    setLoading(true); // Set loading to true before payment
+    try {
+      await handlePayment(); // Call the payment handler
+    } catch (error) {
+      message.error('Payment failed. Please try again.');
+      console.error('Payment error:', error);
+    } finally {
+      setLoading(false); // Reset loading state
+    }
   };
 
   const paymentOptions = [
@@ -130,16 +141,18 @@ const PaymentCard: React.FC<Props> = ({
       title="Payment"
       className="shadow-md sticky top-6"
       actions={[
-        <Button
-          key="pay"
-          type="primary"
-          size="large"
-          block
-          onClick={handlePaymentWithValidation}
-          className="bg-blue-500 hover:bg-blue-600"
-        >
-          Pay ${total}
-        </Button>,
+        <div key="pay" className="px-6 w-full">
+          <Button
+            type="primary"
+            size="large"
+            block
+            onClick={handlePaymentWithValidation}
+            className="bg-blue-500 hover:bg-blue-600"
+            loading={loading}
+          >
+            Pay ${total}
+          </Button>
+        </div>,
       ]}
     >
       <Space direction="vertical" size="middle" style={{ width: '100%' }}>

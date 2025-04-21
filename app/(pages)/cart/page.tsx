@@ -136,8 +136,8 @@ const Cart = () => {
     });
   };
 
-  const handleBuySingle = (productId: string) => {
-    router.push(`/checkout?product=${productId}`);
+  const handleBuySingle = (productId: string, quantity: string) => {
+    router.push(`/checkout?product=${productId}&quantity=${quantity}`);
   };
 
   const handleCheckout = () => {
@@ -224,7 +224,7 @@ const Cart = () => {
                           <Button
                             key="buy"
                             type="primary"
-                            onClick={() => handleBuySingle(product.id)}
+                            onClick={() => handleBuySingle(product.id, item.quantity.toString())}
                           >
                             Buy Now
                           </Button>,

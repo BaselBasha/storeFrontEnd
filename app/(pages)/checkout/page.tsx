@@ -18,6 +18,7 @@ import Layout from '@/app/components/Layout';
 import ShippingAddressCard from '@/app/components/cardsUI/shippingAdressCard';
 import PaymentCard from '@/app/components/cardsUI/paymentCard';
 import Swal from 'sweetalert2';
+import useCheckoutData from '@/app/hooks/useCheckoutData';
 
 const { Title, Text } = Typography;
 
@@ -51,9 +52,6 @@ interface User {
 }
 
 const CheckoutPage = () => {
-  const [products, setProducts] = useState<CheckoutItem[]>([]);
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState('visa');
   const [addressOption, setAddressOption] = useState<'default' | 'new'>('default');
   const [newAddress, setNewAddress] = useState<Address>({});
@@ -62,40 +60,8 @@ const CheckoutPage = () => {
   const [isEditingAddress, setIsEditingAddress] = useState(true);
   const [cardDetails, setCardDetails] = useState({ cardNumber: '', expiryDate: '', cvv: '' });
   const [paypalEmail, setPaypalEmail] = useState('');
+  const { products, user, loading } = useCheckoutData(singleProductId);
 
-  const fetchUserAndCart = async () => {
-    try {
-      const userRes = await axiosWithAuth.get('/auth/me');
-      setUser(userRes.data);
-
-      let items: CheckoutItem[] = [];
-      if (singleProductId) {
-        const res = await axiosWithAuth.get(`/products/${singleProductId}`);
-        items = [{ product: res.data, quantity: 1 }];
-      } else {
-        const res = await axiosWithAuth.get('/cart');
-        items = Array.isArray(res.data.items)
-          ? res.data.items
-              .filter((item: any) => item.product)
-              .map((item: any) => ({
-                product: item.product,
-                quantity: item.quantity || 1,
-              }))
-          : [];
-      }
-
-      setProducts(items);
-    } catch (error) {
-      console.error('Error loading checkout data:', error);
-      message.error('Failed to load user or cart data.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchUserAndCart();
-  }, [singleProductId]);
 
   const defaultAddress = useMemo(() => {
     return user?.addresses?.find((addr) => addr.isDefault) || user?.addresses?.[0];
