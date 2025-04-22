@@ -1,48 +1,69 @@
-// components/WhyChooseUs.js
-import { FaShippingFast, FaLock, FaTags } from 'react-icons/fa';
+'use client';
 
-export default function WhyChooseUs() {
+import React from 'react';
+import { Card, Col, Row, Typography } from 'antd';
+import { DollarOutlined, LockOutlined, RocketOutlined, DollarCircleOutlined } from '@ant-design/icons';
+
+const { Title, Paragraph } = Typography;
+
+interface Feature {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}
+
+const features: Feature[] = [
+  {
+    icon: <RocketOutlined style={{ fontSize: '2.5rem', color: '#1890ff' }} />,
+    title: 'Fast Delivery',
+    description: 'Experience lightning-fast order processing and shipping, straight to your door.',
+  },
+  {
+    icon: <LockOutlined style={{ fontSize: '2.5rem', color: '#52c41a' }} />,
+    title: 'Top-Notch Security',
+    description: 'Your personal and payment data are protected with enterprise-grade encryption.',
+  },
+  {
+    icon: <DollarOutlined style={{ fontSize: '2.5rem', color: '#fa541c' }} />,
+    title: 'Exclusive Discounts',
+    description: 'Unlock amazing deals and unbeatable prices on your favorite games.',
+  },
+  {
+    icon: <DollarCircleOutlined style={{ fontSize: '2.5rem', color: '#f0b90b' }} />,
+    title: 'Crypto Payments (Coming Soon)',
+    description: 'Get ready to purchase with Bitcoin and more — fast, secure, and decentralized.',
+  },
+];
+
+const WhyChooseUs: React.FC = () => {
   return (
-    <section className="py-44 z-0 bg-transparent relative">
-      <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">
+    <section style={{ padding: '5rem 1rem', background: '#f5f5f5' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+        <Title level={2} style={{ textAlign: 'center', marginBottom: '3rem' }}>
           Why Choose Us?
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-          {/* Box 1: Fast Delivery */}
-          <div className="bg-transparent p-6 rounded-lg shadow-lg text-center hover:shadow-xl transition-shadow duration-300 border border-red-950 border-solid">
-            <FaShippingFast className="text-4xl text-blue-500 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">
-              Fast Delivery
-            </h3>
-            <p className="text-gray-600">
-              Get your orders delivered quickly and reliably to your doorstep.
-            </p>
-          </div>
-
-          {/* Box 2: High Security */}
-          <div className="bg-transparent p-6 rounded-lg shadow-lg text-center hover:shadow-xl transition-shadow duration-300 border border-red-950 border-solid">
-            <FaLock className="text-4xl text-green-500 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">
-              High Security
-            </h3>
-            <p className="text-gray-600">
-              Shop with confidence knowing your data is safe and secure.
-            </p>
-          </div>
-
-          {/* Box 3: High Discounts */}
-          <div className="bg-transparent p-6 rounded-lg shadow-lg text-center hover:shadow-xl transition-shadow duration-300 border border-red-950 border-solid">
-            <FaTags className="text-4xl text-red-500 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">
-              High Discounts
-            </h3>
-            <p className="text-gray-600">
-              Enjoy exclusive deals and save big on every purchase.
-            </p>
-          </div>
-        </div>
+        </Title>
+        <Row gutter={[24, 24]} justify="center">
+          {features.map((feature, index) => (
+            <Col xs={24} sm={12} md={12} lg={6} key={index}>
+              <Card
+                hoverable
+                style={{
+                  textAlign: 'center',
+                  borderRadius: 16,
+                  padding: '2rem 1rem',
+                  height: '100%',
+                }}
+              >
+                <div style={{ marginBottom: 16 }}>{feature.icon}</div>
+                <Title level={4}>{feature.title}</Title>
+                <Paragraph type="secondary">{feature.description}</Paragraph>
+              </Card>
+            </Col>
+          ))}
+        </Row>
       </div>
     </section>
   );
-}
+};
+
+export default WhyChooseUs;

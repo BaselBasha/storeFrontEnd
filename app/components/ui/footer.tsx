@@ -12,7 +12,7 @@ import {
 import { Oxanium, Bebas_Neue, Rajdhani } from 'next/font/google';
 
 // Dynamic import ContactForm with SSR disabled
-const ContactForm = dynamic(() => import('./contactForm'), { ssr: false });
+// const ContactForm = dynamic(() => import('./contactForm'), { ssr: false });
 
 // Configure the fonts
 const oxanium = Oxanium({
@@ -54,13 +54,18 @@ const Footer: React.FC = () => {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/about" className="hover:text-[#db3032] transition-colors">
-                    About Us
+                  <Link href="/consoles" className="hover:text-[#db3032] transition-colors">
+                    Consoles
                   </Link>
                 </li>
                 <li>
-                  <Link href="/contact" className="hover:text-[#db3032] transition-colors">
-                    Contact
+                  <Link href="/pcs" className="hover:text-[#db3032] transition-colors">
+                    Pcs
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/accessories" className="hover:text-[#db3032] transition-colors">
+                    Accessories
                   </Link>
                 </li>
               </ul>
@@ -81,8 +86,8 @@ const Footer: React.FC = () => {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/terms" className="hover:text-[#db3032] transition-colors">
-                    Ask our AI
+                  <Link href="/about-us" className="hover:text-[#db3032] transition-colors">
+                    About us
                   </Link>
                 </li>
               </ul>
@@ -163,7 +168,7 @@ const Footer: React.FC = () => {
           </div>
 
           {/* Form Section (Align to the Right) */}
-          {/* <ContactForm /> */}
+           {/* <ContactForm />  */}
         </div>
 
         {/* Horizontal Line */}
