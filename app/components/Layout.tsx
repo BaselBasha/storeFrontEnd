@@ -2,6 +2,7 @@ import React, { ReactNode } from 'react';
 import Footer from './ui/footer';
 import '@ant-design/v5-patch-for-react-19';
 import Navbar from './navbar';
+import AskAiButton from './askAiButton';
 
 
 
@@ -20,6 +21,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
      
       <main className=" flex-grow container mx-auto bg-gray-100">
         {children}
+        <AskAiButton />
       </main>
 
       
