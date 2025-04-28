@@ -7,36 +7,14 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useCart } from "@/app/context/CardContext";
 
-
 type DropdownContent = Record<string, string[]>;
 type MenuItem = keyof typeof dropdownContent | "account";
 
 const dropdownContent: DropdownContent = {
-  games: [
-    "PC Games",
-    "Console Games",
-    "Digital Game Codes",
-  ],
-  consoles: [
-    "PlayStation Consoles",
-    "Xbox Consoles",
-    "Nintendo Switch",
-    "Console Accessories",
-  ],
-  pcs: [
-    "Gaming Laptops",
-    "Prebuilt Gaming PCs",
-    "Custom PC Builds",
-  ],
-  accessories: [
-    "Keyboards",
-    "Headsets",
-    "Microphones",
-    "Mouses",
-    "Controllers",
-    "Mousepads",
-    "Streaming Gear",
-  ],
+  games: ["PC Games", "Console Games", "Digital Game Codes"],
+  consoles: ["PlayStation Consoles", "Xbox Consoles", "Nintendo Switch", "Console Accessories"],
+  pcs: ["Gaming Laptops", "Prebuilt Gaming PCs", "Custom PC Builds"],
+  accessories: ["Keyboards", "Headsets", "Microphones", "Mouses", "Controllers", "Mousepads", "Streaming Gear"],
 };
 
 export default function GamingStoreNavbar() {
@@ -48,7 +26,6 @@ export default function GamingStoreNavbar() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const { cartCount } = useCart();
-  
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
@@ -69,23 +46,19 @@ export default function GamingStoreNavbar() {
   }, []);
 
   const handleMouseEnter = (item: MenuItem) => {
-    if (hideTimeout) {
-      clearTimeout(hideTimeout);
-    }
+    if (hideTimeout) clearTimeout(hideTimeout);
     setHoveredItem(item);
   };
 
   const handleMouseLeave = () => {
-    const timeout = setTimeout(() => {
-      setHoveredItem(null);
-    }, 300);
+    const timeout = setTimeout(() => setHoveredItem(null), 300);
     setHideTimeout(timeout);
   };
 
   const handleLogout = () => {
     sessionStorage.removeItem("accessToken");
     localStorage.removeItem("accessToken");
-    localStorage.removeItem('cartCount');
+    localStorage.removeItem("cartCount");
     setIsSignedIn(false);
     setIsAdmin(false);
     router.push("/signin");
@@ -103,9 +76,8 @@ export default function GamingStoreNavbar() {
 
   const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && searchQuery.trim()) {
-      // Redirect to a search results page with the query
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery(""); // Clear the input after search
+      setSearchQuery("");
     }
   };
 
@@ -114,7 +86,7 @@ export default function GamingStoreNavbar() {
   return (
     <>
       {/* Promo Banner */}
-      <div className="bg-gradient-to-r from-purple-600 to-red-600 text-white text-center py-2 px-4 text-sm font-semibold">
+      <div className="bg-gradient-to-r from-blue-400 to-purple-400 text-white text-center py-2 px-4 text-sm font-semibold">
         Free Shipping on Orders Over $50!{" "}
         <Link href="/shop" className="underline hover:text-yellow-300">
           Shop Now
@@ -122,15 +94,15 @@ export default function GamingStoreNavbar() {
       </div>
 
       {/* Navbar */}
-      <nav className="bg-gray-900 sticky top-0 z-30 shadow-xl border-b border-red-500">
+      <nav className="bg-white sticky top-0 z-30 shadow-lg border-b border-gray-200">
         <div className="container mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center">
           {/* Logo */}
           <div className="flex justify-between w-full md:w-auto mb-3 md:mb-0">
-            <Link href="/" className="text-2xl font-extrabold text-red-500 hover:text-red-400 transition-colors flex items-center">
+            <Link href="/" className="text-2xl font-extrabold text-blue-600 hover:text-blue-500 transition-colors flex items-center">
               <FaGamepad className="mr-2" /> KRAKEN GAMING
             </Link>
             <button
-              className="md:hidden text-white hover:text-red-500 transition-colors"
+              className="md:hidden text-blue-600 hover:text-blue-500 transition-colors"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               <FaBars className="h-6 w-6" />
@@ -145,14 +117,14 @@ export default function GamingStoreNavbar() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleSearch}
-                className="w-full py-2 px-4 pr-12 bg-gray-800 text-white rounded-full border border-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500 placeholder-gray-400"
+                className="w-full py-2 px-4 pr-12 bg-gray-100 text-gray-800 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 placeholder-gray-500"
                 placeholder="Search games, consoles, accessories..."
               />
               <button
                 onClick={() => searchQuery.trim() && router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 hover:text-red-500 transition-colors"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 hover:text-blue-500 transition-colors"
               >
-                <FaSearch className="h-5 w-5 text-white" />
+                <FaSearch className="h-5 w-5 text-gray-700" />
               </button>
             </div>
           </div>
@@ -164,29 +136,29 @@ export default function GamingStoreNavbar() {
               onMouseEnter={() => handleMouseEnter("account")}
               onMouseLeave={handleMouseLeave}
             >
-              <span className="text-white hover:text-red-500 transition-colors flex items-center cursor-pointer">
+              <span className="text-gray-700 hover:text-blue-500 transition-colors flex items-center cursor-pointer">
                 <FaUser className="mr-2" /> Account
               </span>
               {hoveredItem === "account" && (
-                <div className="absolute right-0 top-full mt-2 w-56 bg-gray-800 text-white p-4 rounded-lg shadow-lg border border-red-500 z-20">
+                <div className="absolute right-0 top-full mt-2 w-56 bg-white text-gray-700 p-4 rounded-lg shadow-lg border border-blue-300 z-20">
                   {isSignedIn ? (
                     <>
-                      <h3 className="text-lg font-bold text-red-500 mb-2">ACCOUNT</h3>
+                      <h3 className="text-lg font-bold text-blue-600 mb-2">ACCOUNT</h3>
                       <ul className="space-y-3">
                         <li>
-                          <Link href="/profile" className="flex items-center text-gray-300 hover:text-red-500 transition-colors">
+                          <Link href="/profile" className="flex items-center hover:text-blue-500 transition-colors">
                             <FaUser className="mr-2" /> Profile
                           </Link>
                         </li>
                         <li>
-                          <Link href="/orders" className="flex items-center text-gray-300 hover:text-red-500 transition-colors">
+                          <Link href="/orders" className="flex items-center hover:text-blue-500 transition-colors">
                             <FaBoxOpen className="mr-2" /> Orders
                           </Link>
                         </li>
                         <li>
                           <button
                             onClick={handleLogout}
-                            className="flex items-center text-gray-300 hover:text-red-500 transition-colors w-full text-left"
+                            className="flex items-center hover:text-blue-500 transition-colors w-full text-left"
                           >
                             <FaSignOutAlt className="mr-2" /> Logout
                           </button>
@@ -195,17 +167,13 @@ export default function GamingStoreNavbar() {
                     </>
                   ) : (
                     <>
-                      <h3 className="text-lg font-bold text-red-500 mb-2">ACCOUNT</h3>
+                      <h3 className="text-lg font-bold text-blue-600 mb-2">ACCOUNT</h3>
                       <ul className="space-y-3">
                         <li>
-                          <Link href="/signin" className="flex items-center text-gray-300 hover:text-red-500 transition-colors">
-                            Sign In
-                          </Link>
+                          <Link href="/signin" className="hover:text-blue-500 transition-colors">Sign In</Link>
                         </li>
                         <li>
-                          <Link href="/signup" className="flex items-center text-gray-300 hover:text-red-500 transition-colors">
-                            Sign Up
-                          </Link>
+                          <Link href="/signup" className="hover:text-blue-500 transition-colors">Sign Up</Link>
                         </li>
                       </ul>
                     </>
@@ -214,7 +182,7 @@ export default function GamingStoreNavbar() {
               )}
             </div>
             {isAdmin && (
-              <Link href="/admin/dashboard" className="text-white hover:text-red-500 transition-colors flex items-center">
+              <Link href="/admin/dashboard" className="text-gray-700 hover:text-blue-500 transition-colors flex items-center">
                 <FaKeyboard className="mr-1" /> Dashboard
               </Link>
             )}
@@ -227,31 +195,31 @@ export default function GamingStoreNavbar() {
                     router.push("/favorite");
                   }
                 }}
-                className="flex items-center text-white hover:text-red-500 transition-colors relative"
+                className="flex items-center text-gray-700 hover:text-blue-500 transition-colors relative"
               >
                 <FaHeart className="h-6 w-6" />
               </button>
-              <span className="absolute bottom-full mb-1 left-1/2 transform -translate-x-1/2 px-2 py-1 text-xs rounded bg-black text-white opacity-0 group-hover:opacity-100 transition-opacity">
+              <span className="absolute bottom-full mb-1 left-1/2 transform -translate-x-1/2 px-2 py-1 text-xs rounded bg-gray-600 text-white opacity-0 group-hover:opacity-100 transition-opacity">
                 Favorites
               </span>
             </div>
 
             <button
               onClick={handleCartClick}
-              className="flex items-center text-white hover:text-red-500 transition-colors relative"
+              className="flex items-center text-gray-700 hover:text-blue-500 transition-colors relative"
             >
               <FaShoppingCart className="h-6 w-6" />
               <span className="ml-1 font-bold">{cartCount}</span>
             </button>
-            <Link href="/notifications" className="relative text-white hover:text-red-500 transition-colors">
+            <Link href="/notifications" className="relative text-gray-700 hover:text-blue-500 transition-colors">
               <FaBell className="h-6 w-6" />
-              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">3</span>
+              <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">3</span>
             </Link>
           </div>
         </div>
 
         {/* Secondary Nav (Categories) */}
-        <div className="hidden md:flex bg-gray-800 py-2 border-t border-gray-700">
+        <div className="hidden md:flex bg-gray-100 py-2 border-t border-gray-200">
           <div className="container mx-auto px-4 flex space-x-6">
             {menuItemsLeft.map((item) => (
               <div
@@ -260,7 +228,7 @@ export default function GamingStoreNavbar() {
                 onMouseEnter={() => handleMouseEnter(item)}
                 onMouseLeave={handleMouseLeave}
               >
-                <Link href={`/${item}`} className="text-gray-300 hover:text-red-500 transition-colors flex items-center">
+                <Link href={`/${item}`} className="text-gray-700 hover:text-blue-500 transition-colors flex items-center">
                   {item === "games" && <FaGamepad className="mr-1" />}
                   {item === "consoles" && <FaGamepad className="mr-1" />}
                   {item === "pcs" && <FaLaptop className="mr-1" />}
@@ -268,13 +236,13 @@ export default function GamingStoreNavbar() {
                   {item.charAt(0).toUpperCase() + item.slice(1)}
                 </Link>
                 {hoveredItem === item && (
-                  <div className="absolute left-0 top-full mt-2 w-64 bg-gray-800 text-white p-4 rounded-lg shadow-lg border border-red-500 z-20">
+                  <div className="absolute left-0 top-full mt-2 w-64 bg-white text-gray-700 p-4 rounded-lg shadow-lg border border-blue-300 z-20">
                     <ul className="space-y-2">
                       {dropdownContent[item].map((subItem) => (
                         <li key={subItem}>
                           <Link
                             href={`/${item}/${subItem.toLowerCase().replace(/ /g, "-")}`}
-                            className="block text-gray-300 hover:text-red-500 transition-colors"
+                            className="block hover:text-blue-500 transition-colors"
                           >
                             {subItem}
                           </Link>
@@ -290,59 +258,37 @@ export default function GamingStoreNavbar() {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden bg-gray-800 text-white p-4 space-y-4 border-t border-gray-700">
+          <div className="md:hidden bg-gray-100 text-gray-700 p-4 space-y-4 border-t border-gray-300">
             <div className="flex flex-col space-y-3">
               {menuItemsLeft.map((item) => (
-                <Link
-                  key={item}
-                  href={`/${item}`}
-                  className="text-gray-300 hover:text-red-500 transition-colors flex items-center"
-                >
-                  {item === "games" && <FaGamepad className="mr-2" />}
-                  {item === "consoles" && <FaGamepad className="mr-2" />}
-                  {item === "pcs" && <FaLaptop className="mr-2" />}
-                  {item === "accessories" && <FaKeyboard className="mr-2" />}
+                <Link key={item} href={`/${item}`} className="hover:text-blue-500 transition-colors flex items-center">
                   {item.charAt(0).toUpperCase() + item.slice(1)}
                 </Link>
               ))}
               {isAdmin && (
-                <Link href="/admin/dashboard" className="text-gray-300 hover:text-red-500 transition-colors flex items-center">
-                  <FaKeyboard className="mr-2" /> Dashboard
+                <Link href="/admin/dashboard" className="hover:text-blue-500 transition-colors flex items-center">
+                  Dashboard
                 </Link>
               )}
               {isSignedIn ? (
                 <>
-                  <Link href="/profile" className="text-gray-300 hover:text-red-500 transition-colors flex items-center">
-                    <FaUser className="mr-2" /> Profile
+                  <Link href="/profile" className="hover:text-blue-500 transition-colors flex items-center">
+                    Profile
                   </Link>
-                  <Link href="/orders" className="text-gray-300 hover:text-red-500 transition-colors flex items-center">
-                    <FaBoxOpen className="mr-2" /> Orders
+                  <Link href="/orders" className="hover:text-blue-500 transition-colors flex items-center">
+                    Orders
                   </Link>
-                  <Link
-                    href="/favorite"
-                    onClick={(e) => {
-                      if (!isSignedIn) {
-                        e.preventDefault();
-                        toast.error("You need to sign in to access your favorites.");
-                        router.push("/signin");
-                      }
-                    }}
-                    className="text-gray-300 hover:text-red-500 transition-colors flex items-center"
-                  >
-                    <FaHeart className="mr-2" /> Favorites
-                  </Link>
-
                   <button
                     onClick={handleLogout}
-                    className="text-gray-300 hover:text-red-500 transition-colors text-left flex items-center"
+                    className="hover:text-blue-500 transition-colors text-left flex items-center"
                   >
-                    <FaSignOutAlt className="mr-2" /> Logout
+                    Logout
                   </button>
                 </>
               ) : (
                 <>
-                  <Link href="/signin" className="text-gray-300 hover:text-red-500 transition-colors">Sign In</Link>
-                  <Link href="/signup" className="text-gray-300 hover:text-red-500 transition-colors">Sign Up</Link>
+                  <Link href="/signin" className="hover:text-blue-500 transition-colors">Sign In</Link>
+                  <Link href="/signup" className="hover:text-blue-500 transition-colors">Sign Up</Link>
                 </>
               )}
             </div>

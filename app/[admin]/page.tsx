@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Layout from '../components/Layout';
 import HeroSection from '../components/heroSec';
+import MainPageProducts from '../products/mainPageProducts';
 
 export default function Admin() {
   const router = useRouter();
@@ -37,6 +38,7 @@ export default function Admin() {
   return (
     <Layout>
       <HeroSection />
+      <MainPageProducts />
     </Layout>
   );
 }

@@ -1,97 +1,39 @@
 'use client'
 
-import React, { useEffect, useState, useMemo } from 'react'
-import axios from '../lib/axiosWithAuth'
-import { Card, Typography, Button, Tag, Row, Col, Image, Select, message, Spin } from 'antd'
-import { HeartFilled, HeartOutlined } from '@ant-design/icons'
-import Layout from '../components/Layout'
+import React, { useEffect, useMemo, useState } from 'react';
+import { Card, Typography, Button, Tag, Row, Col, Image, Select, Spin } from 'antd';
+import { HeartFilled, HeartOutlined } from '@ant-design/icons';
+import Layout from '../components/Layout';
+import { useAddToCart } from '@/app/hooks/useAddToCart';
+import { useFavorites } from '@/app/hooks/useAddToFavorite';
 
-const { Text } = Typography
-const { Option } = Select
-
-type Product = {
-  id: string
-  name: string
-  description: string
-  price: number
-  imageUrl: string
-  createdAt: string
-  specifications?: {
-    brand?: string
-    processor?: string
-  }
-}
+const { Text } = Typography;
+const { Option } = Select;
 
 const FavoritesPage = () => {
-  const [products, setProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
-  const [favorites, setFavorites] = useState<Set<string>>(new Set())
-  const [sortOption, setSortOption] = useState<string>('recent')
-
-  const fetchFavorites = async () => {
-    try {
-      setLoading(true)
-      const res = await axios.get<Product[]>('http://localhost:4000/favorites', { withCredentials: true })
-      setProducts(res.data)
-      setFavorites(new Set(res.data.map((item) => item.id)))
-    } catch (err) {
-      message.error('Failed to load favorites.')
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleAddToCart = (productId: string) => {
-    // TODO: hook this to your cart logic
-    message.success('Added to cart!')
-  }
-
-  const toggleFavorite = async (productId: string) => {
-    try {
-      if (favorites.has(productId)) {
-        await axios.delete(`http://localhost:4000/favorites/${productId}`, { withCredentials: true })
-        setFavorites((prev) => {
-          const newSet = new Set(prev)
-          newSet.delete(productId)
-          return newSet
-        })
-        setProducts((prev) => prev.filter((p) => p.id !== productId))
-        message.success('Removed from favorites')
-      } else {
-        await axios.post(
-          'http://localhost:4000/favorites',
-          { productId },
-          { withCredentials: true }
-        )
-        fetchFavorites()
-        message.success('Added to favorites')
-      }
-    } catch (err) {
-      message.error('Failed to update favorites')
-      console.error(err)
-    }
-  }
+  const { products, loading, favorites, fetchFavorites, toggleFavorite } = useFavorites();
+  const { handleAddToCart, cartLoadingId } = useAddToCart();
+  const [sortOption, setSortOption] = useState<string>('recent');
 
   const sortedProducts = useMemo(() => {
-    const sorted = [...products]
+    const sorted = [...products];
     switch (sortOption) {
       case 'priceAsc':
-        return sorted.sort((a, b) => a.price - b.price)
+        return sorted.sort((a, b) => a.price - b.price);
       case 'priceDesc':
-        return sorted.sort((a, b) => b.price - a.price)
+        return sorted.sort((a, b) => b.price - a.price);
       case 'nameAsc':
-        return sorted.sort((a, b) => a.name.localeCompare(b.name))
+        return sorted.sort((a, b) => a.name.localeCompare(b.name));
       case 'recent':
-        return sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        return sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       default:
-        return sorted
+        return sorted;
     }
-  }, [products, sortOption])
+  }, [products, sortOption]);
 
   useEffect(() => {
-    fetchFavorites()
-  }, [])
+    fetchFavorites();
+  }, [fetchFavorites]);
 
   return (
     <Layout>
@@ -116,7 +58,7 @@ const FavoritesPage = () => {
           <div style={{ minHeight: '200px' }}>
             <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
               <Text strong style={{ fontSize: 20 }}>
-                Your Favorite Products
+                Your Favorite Products ({products.length})
               </Text>
               <Select
                 value={sortOption}
@@ -199,6 +141,7 @@ const FavoritesPage = () => {
                             block
                             onClick={() => handleAddToCart(product.id)}
                             style={{ marginTop: 8 }}
+                            loading={cartLoadingId === product.id}
                           >
                             Add to Cart
                           </Button>
@@ -213,7 +156,7 @@ const FavoritesPage = () => {
         </Spin>
       </div>
     </Layout>
-  )
-}
+  );
+};
 
-export default FavoritesPage
+export default FavoritesPage;
