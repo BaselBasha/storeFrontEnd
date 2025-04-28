@@ -37,7 +37,7 @@ const features: Feature[] = [
 
 const WhyChooseUs: React.FC = () => {
   return (
-    <section style={{ padding: '5rem 1rem', background: '#f5f5f5' }}>
+    <section style={{ padding: '5rem 1rem', background: 'transparent' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
         <Title level={2} style={{ textAlign: 'center', marginBottom: '3rem' }}>
           Why Choose Us?
