@@ -125,7 +125,7 @@ export default function AdminProfile() {
 
       message.success('A confirmation email has been sent to your email address. Please check your inbox and follow the link to proceed.');
       setIsModalVisible(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending confirmation email:', error);
       message.error(`Failed to send confirmation email: ${error.message}`);
     } finally {

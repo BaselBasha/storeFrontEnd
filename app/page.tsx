@@ -2,7 +2,6 @@
 import HeroSection from './components/heroSec';
 import Layout from './components/Layout';
 import '@ant-design/v5-patch-for-react-19';
-import dynamic from 'next/dynamic';
 import MainPageProducts from './products/mainPageProducts';
 
 

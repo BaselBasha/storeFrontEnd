@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useMemo, Suspense } from 'react';
 import {
   Card,
   Typography,
@@ -51,17 +51,31 @@ interface User {
   addresses: Address[];
 }
 
-const CheckoutPage = () => {
-  const [paymentMethod, setPaymentMethod] = useState('visa');
-  const [addressOption, setAddressOption] = useState<'default' | 'new'>('default');
-  const [newAddress, setNewAddress] = useState<Address>({});
+// Fallback component for Suspense
+const CheckoutFallback = () => {
+  return (
+    <Layout>
+      <div className="p-6 max-w-7xl mx-auto">
+        <Title level={2}>Checkout</Title>
+        <div className="flex justify-center items-center min-h-[50vh]">
+          <Spin size="large" />
+        </div>
+      </div>
+    </Layout>
+  );
+};
+
+// Main checkout content component
+const CheckoutContent: React.FC = () => {
+  const [paymentMethod, setPaymentMethod] = React.useState('visa');
+  const [addressOption, setAddressOption] = React.useState<'default' | 'new'>('default');
+  const [newAddress, setNewAddress] = React.useState<Address>({});
   const searchParams = useSearchParams();
   const singleProductId = searchParams.get('product');
-  const [isEditingAddress, setIsEditingAddress] = useState(true);
-  const [cardDetails, setCardDetails] = useState({ cardNumber: '', expiryDate: '', cvv: '' });
-  const [paypalEmail, setPaypalEmail] = useState('');
+  const [isEditingAddress, setIsEditingAddress] = React.useState(true);
+  const [cardDetails, setCardDetails] = React.useState({ cardNumber: '', expiryDate: '', cvv: '' });
+  const [paypalEmail, setPaypalEmail] = React.useState('');
   const { products, user, loading } = useCheckoutData(singleProductId);
-
 
   const defaultAddress = useMemo(() => {
     return user?.addresses?.find((addr) => addr.isDefault) || user?.addresses?.[0];
@@ -79,15 +93,13 @@ const CheckoutPage = () => {
   };
 
   const total = useMemo(() => {
-    return products.reduce(
-      (sum, { product, quantity }) => sum + (product.price || 0) * (quantity || 1),
-      0
-    ).toFixed(2);
+    return products
+      .reduce((sum, { product, quantity }) => sum + (product.price || 0) * (quantity || 1), 0)
+      .toFixed(2);
   }, [products]);
 
   const handlePayment = async () => {
-    const selectedAddress =
-      addressOption === 'default' ? defaultAddress : newAddress;
+    const selectedAddress = addressOption === 'default' ? defaultAddress : newAddress;
 
     if (!selectedAddress || !isAddressComplete(selectedAddress)) {
       return message.error('Please provide a complete address.');
@@ -130,10 +142,10 @@ const CheckoutPage = () => {
       });
 
       console.log('Order response:', orderResponse.data);
-
-    } catch (error: any) {
-      console.error('Payment error:', error);
-      message.error(error?.response?.data?.message || 'Payment failed.');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Payment error:', errorMessage);
+      message.error((error as any)?.response?.data?.message || 'Payment failed.');
     }
   };
 
@@ -218,4 +230,10 @@ const CheckoutPage = () => {
   );
 };
 
-export default CheckoutPage;
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={<CheckoutFallback />}>
+      <CheckoutContent />
+    </Suspense>
+  );
+}

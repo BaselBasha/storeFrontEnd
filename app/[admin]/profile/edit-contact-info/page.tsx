@@ -37,14 +37,14 @@ interface User {
   addresses?: Address[];
 }
 
-export const EditContactInfo = () => {
+export default function Page() {
   const [user, setUser] = useState<User | null>(null);
   const [primaryAddress, setPrimaryAddress] = useState<Address | null>(null);
-  const [loading, setLoading] = useState(true); // Initial data fetch loading
-  const [loadingUpdate, setLoadingUpdate] = useState(false); // Update submission loading
+  const [loading, setLoading] = useState(true);
+  const [loadingUpdate, setLoadingUpdate] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [editingField, setEditingField] = useState<string | null>(null); // Track which field is being edited
-  const [editValue, setEditValue] = useState<any>(null); // Store the value being edited
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState<any>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -57,25 +57,17 @@ export const EditContactInfo = () => {
     const fetchUserData = async () => {
       try {
         const token = localStorage.getItem('accessToken');
-        if (!token) {
-          throw new Error('No access token found');
-        }
+        if (!token) throw new Error('No access token found');
 
         const decodedToken = jwtDecode(token);
         const userId = decodedToken.sub;
-        if (!userId) {
-          throw new Error('No user ID found in token');
-        }
+        if (!userId) throw new Error('No user ID found in token');
 
         const response = await fetch(`http://localhost:4000/users/id/${userId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
+          headers: { 'Authorization': `Bearer ${token}` },
         });
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch user data');
-        }
+        if (!response.ok) throw new Error('Failed to fetch user data');
 
         const data = await response.json();
         const primaryAddr = data.addresses?.find((addr: Address) => addr.isDefault) || data.addresses?.[0];
@@ -101,15 +93,12 @@ export const EditContactInfo = () => {
     setLoadingUpdate(true);
     try {
       const token = localStorage.getItem('accessToken');
-      if (!token) {
-        throw new Error('No access token found');
-      }
+      if (!token) throw new Error('No access token found');
 
       let payload: any = {};
       if (field === 'phoneNumber') {
         payload = { phoneNumber: editValue };
       } else {
-        // Construct the address object with the edited field
         const addressPayload: any = {
           addressLine1: primaryAddress?.addressLine1,
           addressLine2: primaryAddress?.addressLine2,
@@ -157,17 +146,9 @@ export const EditContactInfo = () => {
     setEditValue(null);
   };
 
-  if (!isMounted) {
-    return null;
-  }
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!user) {
-    return <div>Error: Unable to load user data</div>;
-  }
+  if (!isMounted) return null;
+  if (loading) return <div>Loading...</div>;
+  if (!user) return <div>Error: Unable to load user data</div>;
 
   const dataSource = [
     { key: 'phoneNumber', label: 'Phone Number', value: user.phoneNumber || '' },
@@ -191,12 +172,7 @@ export const EditContactInfo = () => {
       key: 'value',
       render: (text: string, record: any) => {
         if (editingField === record.key) {
-          return (
-            <Input
-              value={editValue}
-              onChange={(e) => setEditValue(e.target.value)}
-            />
-          );
+          return <Input value={editValue} onChange={(e) => setEditValue(e.target.value)} />;
         }
         return <span>{text}</span>;
       },
@@ -249,7 +225,6 @@ export const EditContactInfo = () => {
     <ProtectedAdmin>
       <div className={cn("flex flex-col md:flex-row h-screen w-full mx-auto")}>
         <Sidebar initialOpen={false} />
-        
         <Layout>
           <Content style={{ margin: '24px 16px', padding: 24 }}>
             <Card
@@ -280,6 +255,4 @@ export const EditContactInfo = () => {
       </div>
     </ProtectedAdmin>
   );
-};
-
-export default EditContactInfo;
+}

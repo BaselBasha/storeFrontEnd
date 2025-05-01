@@ -1,14 +1,27 @@
-// pages/confirm-identity.tsx
-
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, Input, Button, message, Spin, Typography } from 'antd';
 
 const { Title } = Typography;
 
-const ConfirmIdentity = () => {
+// Interface for API response data
+interface VerifyTokenResponse {
+  pendingAction: string;
+}
+
+interface ErrorResponse {
+  message?: string;
+}
+
+// Fallback component for Suspense
+const ConfirmIdentityFallback = () => {
+  return <div>Loading...</div>;
+};
+
+// Main component wrapped in Suspense
+const ConfirmIdentityContent: React.FC = () => {
   const [token, setToken] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState('');
@@ -17,6 +30,34 @@ const ConfirmIdentity = () => {
   const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const verifyToken = useCallback(async (token: string) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/find-user-by-reset-token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token }),
+      });
+
+      if (!response.ok) {
+        const errorData: ErrorResponse = await response.json();
+        throw new Error(errorData.message || 'Failed to verify token');
+      }
+
+      const data: VerifyTokenResponse = await response.json();
+      if (!data.pendingAction) {
+        throw new Error('No pending action found for this token');
+      }
+      setPendingAction(data.pendingAction);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Error verifying token:', errorMessage);
+      message.error(`Failed to verify token: ${errorMessage}`);
+      router.push('/login');
+    }
+  }, [router]); // Include router as a dependency since it's used in the catch block
 
   useEffect(() => {
     setIsMounted(true);
@@ -28,34 +69,7 @@ const ConfirmIdentity = () => {
       message.error('Invalid or missing token');
       router.push('/login');
     }
-  }, [searchParams, router]);
-
-  const verifyToken = async (token: string) => {
-    try {
-      const response = await fetch('http://localhost:4000/users/find-user-by-reset-token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to verify token');
-      }
-
-      const data = await response.json();
-      if (!data.pendingAction) {
-        throw new Error('No pending action found for this token');
-      }
-      setPendingAction(data.pendingAction);
-    } catch (error) {
-      console.error('Error verifying token:', error.message);
-      message.error(`Failed to verify token: ${error.message}`);
-      router.push('/login');
-    }
-  };
+  }, [searchParams, router]); // verifyToken is memoized, so no need to include it
 
   const handleChangePassword = async () => {
     if (!newPassword || !confirmPassword) {
@@ -73,9 +87,14 @@ const ConfirmIdentity = () => {
       return;
     }
 
+    if (!token) {
+      message.error('Invalid token');
+      return;
+    }
+
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:4000/users/change-password', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/change-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -87,24 +106,30 @@ const ConfirmIdentity = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData: ErrorResponse = await response.json();
         throw new Error(errorData.message || 'Failed to change password');
       }
 
       message.success('Password changed successfully');
       router.push('/login');
-    } catch (error) {
-      console.error('Error changing password:', error.message);
-      message.error(`Failed to change password: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Error changing password:', errorMessage);
+      message.error(`Failed to change password: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
   };
 
   const handleProceedToEditProfile = async () => {
+    if (!token) {
+      message.error('Invalid token');
+      return;
+    }
+
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:4000/users/clear-password-reset-token', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/clear-password-reset-token`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -113,12 +138,11 @@ const ConfirmIdentity = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData: ErrorResponse = await response.json();
         throw new Error(errorData.message || 'Failed to clear token');
       }
 
       message.success('Identity verified successfully');
-      // Store the token in sessionStorage to ensure the user remains authenticated
       const accessToken = localStorage.getItem('accessToken');
       if (!accessToken) {
         message.error('Please log in to continue');
@@ -126,9 +150,10 @@ const ConfirmIdentity = () => {
         return;
       }
       router.push('/admin/profile/edit-profile');
-    } catch (error) {
-      console.error('Error proceeding to edit profile:', error.message);
-      message.error(`Failed to proceed: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Error proceeding to edit profile:', errorMessage);
+      message.error(`Failed to proceed: ${errorMessage}`);
       router.push('/login');
     } finally {
       setLoading(false);
@@ -183,4 +208,10 @@ const ConfirmIdentity = () => {
   );
 };
 
-export default ConfirmIdentity;
+export default function ConfirmIdentity() {
+  return (
+    <Suspense fallback={<ConfirmIdentityFallback />}>
+      <ConfirmIdentityContent />
+    </Suspense>
+  );
+}

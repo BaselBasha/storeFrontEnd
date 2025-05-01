@@ -1,9 +1,9 @@
-"use client";
-import React, { useEffect, useId, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
-import { useRef } from "react";
-import { cn } from "@/lib/utils";
-import { SparklesCore } from "@/app/components/ui/sparkles";
+'use client';
+
+import React, { useEffect, useId, useState, useRef } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import { cn } from '@/lib/utils';
+import { SparklesCore } from '@/app/components/ui/sparkles';
 
 export const Cover = ({
   children,
@@ -13,17 +13,16 @@ export const Cover = ({
   className?: string;
 }) => {
   const [hovered, setHovered] = useState(false);
-
   const ref = useRef<HTMLDivElement>(null);
-
   const [containerWidth, setContainerWidth] = useState(0);
   const [beamPositions, setBeamPositions] = useState<number[]>([]);
 
-  useEffect(() => {
+  const updateDimensions = () => {
     if (ref.current) {
-      setContainerWidth(ref.current?.clientWidth ?? 0);
+      const width = ref.current.clientWidth ?? 0;
+      const height = ref.current.clientHeight ?? 0;
+      setContainerWidth(width);
 
-      const height = ref.current?.clientHeight ?? 0;
       const numberOfBeams = Math.floor(height / 10); // Adjust the divisor to control the spacing
       const positions = Array.from(
         { length: numberOfBeams },
@@ -31,14 +30,22 @@ export const Cover = ({
       );
       setBeamPositions(positions);
     }
-  }, [ref.current]);
+  };
+
+  useEffect(() => {
+    updateDimensions(); // Run on mount
+
+    // Add resize event listener to update dimensions on window resize
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, []); // Empty dependency array: runs once on mount
 
   return (
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       ref={ref}
-      className="relative hover:bg-neutral-900  group/cover inline-block dark:bg-neutral-900 bg-neutral-900 px-2 py-2  transition duration-200 rounded-sm"
+      className="relative hover:bg-neutral-900 group/cover inline-block dark:bg-neutral-900 bg-neutral-900 px-2 py-2 transition duration-200 rounded-sm"
     >
       <AnimatePresence>
         {hovered && (
@@ -55,12 +62,12 @@ export const Cover = ({
           >
             <motion.div
               animate={{
-                translateX: ["-50%", "0%"],
+                translateX: ['-50%', '0%'],
               }}
               transition={{
                 translateX: {
                   duration: 10,
-                  ease: "linear",
+                  ease: 'linear',
                   repeat: Infinity,
                 },
               }}
@@ -106,7 +113,7 @@ export const Cover = ({
           y: hovered ? [0, 30, -30, 30, -30, 0] : 0,
         }}
         exit={{
-          filter: "none",
+          filter: 'none',
           scale: 1,
           x: 0,
           y: 0,
@@ -116,12 +123,12 @@ export const Cover = ({
           x: {
             duration: 0.2,
             repeat: Infinity,
-            repeatType: "loop",
+            repeatType: 'loop',
           },
           y: {
             duration: 0.2,
             repeat: Infinity,
-            repeatType: "loop",
+            repeatType: 'loop',
           },
           scale: {
             duration: 0.2,
@@ -131,7 +138,7 @@ export const Cover = ({
           },
         }}
         className={cn(
-          "dark:text-white inline-block text-neutral-100 relative z-20 group-hover/cover:text-white transition duration-200",
+          'dark:text-white inline-block text-neutral-100 relative z-20 group-hover/cover:text-white transition duration-200',
           className
         )}
       >
@@ -159,51 +166,49 @@ export const Beam = ({
 
   return (
     <motion.svg
-      width={width ?? "600"}
+      width={width ?? '600'}
       height="1"
-      viewBox={`0 0 ${width ?? "600"} 1`}
+      viewBox={`0 0 ${width ?? '600'} 1`}
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={cn("absolute inset-x-0 w-full", className)}
+      className={cn('absolute inset-x-0 w-full', className)}
       {...svgProps}
     >
       <motion.path
-        d={`M0 0.5H${width ?? "600"}`}
+        d={`M0 0.5H${width ?? '600'}`}
         stroke={`url(#svgGradient-${id})`}
       />
-
-<defs>
-  <motion.linearGradient
-    id={`svgGradient-${id}`}
-    key={String(hovered)}
-    gradientUnits="userSpaceOnUse"
-    gradientTransform="translate(0, -15)"
-    initial={{
-      x1: "0%",
-      x2: hovered ? "-10%" : "-5%",
-      y1: 0,
-      y2: 0,
-    }}
-    animate={{
-      x1: "110%",
-      x2: hovered ? "100%" : "105%",
-      y1: 0,
-      y2: 0,
-    }}
-    transition={{
-      duration: hovered ? 0.5 : duration ?? 2,
-      ease: "linear",
-      repeat: Infinity,
-      delay: hovered ? Math.random() * (1 - 0.2) + 0.2 : 0,
-      repeatDelay: hovered ? Math.random() * (2 - 1) + 1 : delay ?? 1,
-    }}
-  >
-    <stop stopColor="#2EB9DF" stopOpacity="0" />
-    <stop stopColor="#3b82f6" />
-    <stop offset="1" stopColor="#3b82f6" stopOpacity="0" />
-  </motion.linearGradient>
-</defs>
-
+      <defs>
+        <motion.linearGradient
+          id={`svgGradient-${id}`}
+          key={String(hovered)}
+          gradientUnits="userSpaceOnUse"
+          gradientTransform="translate(0, -15)"
+          initial={{
+            x1: '0%',
+            x2: hovered ? '-10%' : '-5%',
+            y1: 0,
+            y2: 0,
+          }}
+          animate={{
+            x1: '110%',
+            x2: hovered ? '100%' : '105%',
+            y1: 0,
+            y2: 0,
+          }}
+          transition={{
+            duration: hovered ? 0.5 : duration ?? 2,
+            ease: 'linear',
+            repeat: Infinity,
+            delay: hovered ? Math.random() * (1 - 0.2) + 0.2 : 0,
+            repeatDelay: hovered ? Math.random() * (2 - 1) + 1 : delay ?? 1,
+          }}
+        >
+          <stop stopColor="#2EB9DF" stopOpacity="0" />
+          <stop stopColor="#3b82f6" />
+          <stop offset="1" stopColor="#3b82f6" stopOpacity="0" />
+        </motion.linearGradient>
+      </defs>
     </motion.svg>
   );
 };

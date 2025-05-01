@@ -34,7 +34,7 @@ interface User {
   role?: string;
 }
 
-export const EditProfile = () => {
+const EditProfile = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true); // Initial data fetch loading
   const [loadingUpdate, setLoadingUpdate] = useState(false); // Update submission loading
