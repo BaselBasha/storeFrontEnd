@@ -113,7 +113,7 @@ const Consoles: React.FC = () => {
         const subcategoriesResponse = await axios.get<SubcategorySummary[]>(
           "https://store-backend-tb6b.onrender.com/categories/67f6d1e0c0dec2f87edd1ad7/subcategories"
         );
-        console.log("Subcategories Response:", subcategoriesResponse.data);
+        //console.log("Subcategories Response:", subcategoriesResponse.data);
 
         const subcategoriesWithProducts = await Promise.all(
           subcategoriesResponse.data.map(async (subcat) => {

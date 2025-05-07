@@ -84,7 +84,7 @@ const SignUpForm: React.FC = () => {
         }
       } else {
         const errorData = await response.json();
-        console.log('Error Data:', errorData);
+        //console.log('Error Data:', errorData);
   
         if (response.status === 401) {
           const errorMessage = errorData.message;

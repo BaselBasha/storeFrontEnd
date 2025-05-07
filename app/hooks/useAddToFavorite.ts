@@ -21,6 +21,14 @@ export const useFavorites = () => {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
   const fetchFavorites = useCallback(async () => {
+    const accessToken = localStorage.getItem('accessToken');
+    if (!accessToken) {
+      message.info('Please log in to view favorites');
+      setProducts([]);
+      setFavorites(new Set());
+      return;
+    }
+
     try {
       setLoading(true);
       const res = await axios.get<Product[]>('https://store-backend-tb6b.onrender.com/favorites', { withCredentials: true });

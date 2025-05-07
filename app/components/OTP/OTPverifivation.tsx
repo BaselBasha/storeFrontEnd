@@ -16,7 +16,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({ email }) => {
   const router = useRouter(); // Initialize useRouter
   
   const handleSubmit = async () => {
-    console.log('OTP Value:', otpValue); // Log the OTP value here
+    //console.log('OTP Value:', otpValue); // Log the OTP value here
 
     setLoading(true);
   
@@ -25,7 +25,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({ email }) => {
       email,
     };
   
-    console.log('Data to be sent:', dataToSend); // Log the data to verify correctness
+    //console.log('Data to be sent:', dataToSend); // Log the data to verify correctness
   
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/verify-otp`, {
@@ -54,7 +54,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({ email }) => {
   
 
   const onValuesChange = (changedValues: any, allValues: any) => {
-    console.log('onValuesChange triggered with values:', allValues);
+    //console.log('onValuesChange triggered with values:', allValues);
     if (allValues.otp && allValues.otp.length === 6) {
       setOtpValue(allValues.otp);  // Store the OTP value in state
       handleSubmit();
@@ -63,7 +63,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({ email }) => {
 
   const onChange: OTPProps['onChange'] = (text:any) => {
     setOtpValue(text);
-    console.log('OTP:', text);
+    //console.log('OTP:', text);
   };
 
   const sharedProps: OTPProps = {

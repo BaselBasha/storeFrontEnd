@@ -62,14 +62,14 @@ const MainPageProducts = () => {
   
     fetchData();
     fetchFavorites();
-  }, []); // Empty dependency array! No fetchFavorites inside dependency
+  }, []);
   
 
   // Check if user is logged in
   const isLoggedIn = (): boolean => {
     return !!localStorage.getItem('accessToken');
   };
-
+  
   const handleToggleFavorite = async (product: Product) => {
     if (!isLoggedIn()) {
       notifyLoginRequired();
@@ -116,7 +116,7 @@ const MainPageProducts = () => {
       notifyLoginRequired();
       return;
     }
-    console.log(`Initiating buy now for product ${productId}`);
+    //console.log(`Initiating buy now for product ${productId}`);
     router.push(`/checkout?product=${productId}&quantity=1`);
   };
 

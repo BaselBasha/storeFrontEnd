@@ -101,11 +101,11 @@ const SignUpForm: React.FC = () => {
       }
 
       const result = await response.json();
-      console.log("Signup successful:", result);
+      //console.log("Signup successful:", result);
       toast.success("Signup successful! Please check your email for the OTP.");
       setIsSubmitted(true);
     } catch (error: any) {
-      console.error("Signup error:", error.message);
+      //console.error("Signup error:", error.message);
       toast.error(error.message || "Something went wrong during signup");
     } finally {
       setLoading(false);

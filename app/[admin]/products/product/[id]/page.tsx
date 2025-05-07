@@ -82,9 +82,9 @@ export default function ProductPage({ params: paramsPromise }: { params: Promise
     formData.append('file', file);
   
     // Log FormData contents for debugging
-    console.log('FormData contents:');
+    //console.log('FormData contents:');
     for (const [key, value] of formData.entries()) {
-      console.log(`${key}: ${value}`);
+      //console.log(`${key}: ${value}`);
     }
   
     try {

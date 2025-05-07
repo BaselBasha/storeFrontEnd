@@ -141,7 +141,7 @@ const CheckoutContent: React.FC = () => {
         text: 'Your order has been placed successfully.',
       });
 
-      console.log('Order response:', orderResponse.data);
+      //console.log('Order response:', orderResponse.data);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error('Payment error:', errorMessage);
