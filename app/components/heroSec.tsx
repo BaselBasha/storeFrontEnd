@@ -28,12 +28,10 @@ const slides = [
 export default function HeroSection() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <BackgroundBeams />
-
-      {/* <div 
+      <div 
   className="w-full max-w-7xlc h-fit mx-auto overflow-hidden pt-5 bg-cover bg-center bg-no-repeat"
   style={{ backgroundImage: "url('/images/cube1.jpeg')" }}
-> */}
+>
         <h1 className="text-lg font-bold text-center my-8 text-black px-4 sm:text-sm sm:pb-4 sm:px-6 md:text-3xl md:px-24 lg:px-24 xl:px-32 md:pb-28">
           Dive into <span className='text-red-900'>KRAKEN</span>, your go-to online games store! Discover top titles, exclusive deals, and fast downloads at great prices. Join now and conquer your next adventure!
         </h1>
@@ -41,7 +39,7 @@ export default function HeroSection() {
           <Carousel slides={slides} />
           <WhyChooseUs />
         </div>
-      {/* </div> */}
+      </div>
     </Suspense>
   )
 }
