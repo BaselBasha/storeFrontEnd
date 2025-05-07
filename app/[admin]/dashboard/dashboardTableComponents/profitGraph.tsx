@@ -38,7 +38,7 @@ const ProfitGraph: React.FC = () => {
   useEffect(() => {
     const fetchProfitData = async () => {
       try {
-        const response = await fetch('http://localhost:4000/orders/weekly-profit');
+        const response = await fetch('https://store-backend-tb6b.onrender.com/orders/weekly-profit');
         const data: ProfitData = await response.json();
 
         // Only update state if the data actually changed

@@ -18,7 +18,7 @@ const OutOfStock: React.FC = () => {
   useEffect(() => {
     const fetchOutOfStockProducts = async () => {
       try {
-        const response = await fetch('http://localhost:4000/products/out-of-stock'); // Adjust the URL if necessary
+        const response = await fetch('https://store-backend-tb6b.onrender.com/products/out-of-stock'); // Adjust the URL if necessary
         const data = await response.json();
         setProducts(data); // Assuming the API returns an array of products
       } catch (error) {

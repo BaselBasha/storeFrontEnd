@@ -43,7 +43,7 @@ const AdminUsersPage: React.FC = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get<UserFromApi[]>('http://localhost:4000/users');
+        const response = await axios.get<UserFromApi[]>('https://store-backend-tb6b.onrender.com/users');
         const transformedUsers: User[] = response.data.map((user) => ({
           ...user,
           gender: user.gender as 'male' | 'female',
@@ -74,7 +74,7 @@ const AdminUsersPage: React.FC = () => {
 
   const handleBan = async (userId: string) => {
     try {
-      await axios.post(`http://localhost:4000/users/${userId}/ban`);
+      await axios.post(`https://store-backend-tb6b.onrender.com/users/${userId}/ban`);
       message.success(`User with ID ${userId} has been banned.`);
       setUsers((prevUsers) =>
         prevUsers.map((user) =>
@@ -98,7 +98,7 @@ const AdminUsersPage: React.FC = () => {
 
   const handleUnban = async (userId: string) => {
     try {
-      await axios.post(`http://localhost:4000/users/${userId}/unban`);
+      await axios.post(`https://store-backend-tb6b.onrender.com/users/${userId}/unban`);
       message.success(`User with ID ${userId} has been unbanned.`);
       setUsers((prevUsers) =>
         prevUsers.map((user) =>
@@ -122,7 +122,7 @@ const AdminUsersPage: React.FC = () => {
 
   const handleSuspend = async (userId: string) => {
     try {
-      await axios.post(`http://localhost:4000/users/${userId}/suspend`, { durationInDays: 7 });
+      await axios.post(`https://store-backend-tb6b.onrender.com/users/${userId}/suspend`, { durationInDays: 7 });
       const suspensionEndDate = new Date();
       suspensionEndDate.setDate(suspensionEndDate.getDate() + 7);
       message.warning(`User with ID ${userId} has been suspended.`);
@@ -152,7 +152,7 @@ const AdminUsersPage: React.FC = () => {
 
   const handleUnsuspend = async (userId: string) => {
     try {
-      await axios.post(`http://localhost:4000/users/${userId}/unsuspend`);
+      await axios.post(`https://store-backend-tb6b.onrender.com/users/${userId}/unsuspend`);
       message.success(`User with ID ${userId} has been unsuspended.`);
       setUsers((prevUsers) =>
         prevUsers.map((user) =>

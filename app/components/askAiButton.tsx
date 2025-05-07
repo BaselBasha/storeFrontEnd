@@ -40,7 +40,7 @@ const AskAiButton = () => {
 
     try {
       const response = await axios.post<ChatbotResponse>(
-        'http://localhost:4000/chatbot/message',
+        'https://store-backend-tb6b.onrender.com/chatbot/message',
         { message },
         {
           headers: { 'Content-Type': 'application/json' },

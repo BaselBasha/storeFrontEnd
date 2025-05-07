@@ -77,7 +77,7 @@ export const OrdersLineChart = () => {
   const fetchChartData = async (period: TimePeriod) => {
     try {
       setLoading(true);
-      const response = await axios.get<ChartData>(`http://localhost:4000/orders/graph/week`);
+      const response = await axios.get<ChartData>(`https://store-backend-tb6b.onrender.com/orders/graph/week`);
       const { labels, data } = response.data;
 
       setChartData({

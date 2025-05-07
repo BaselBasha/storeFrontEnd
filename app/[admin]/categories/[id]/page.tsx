@@ -35,11 +35,11 @@ export default function CategoryEditPage({ params: paramsPromise }: { params: Pr
   useEffect(() => {
     const fetchCategory = async () => {
       try {
-        const response = await fetch(`http://localhost:4000/categories/id/${params.id}`);
+        const response = await fetch(`https://store-backend-tb6b.onrender.com/categories/id/${params.id}`);
         if (!response.ok) throw new Error('Failed to fetch category');
         const mainData: Category = await response.json();
         
-        const subResponse = await fetch(`http://localhost:4000/categories/${params.id}/subcategories`);
+        const subResponse = await fetch(`https://store-backend-tb6b.onrender.com/categories/${params.id}/subcategories`);
         if (!subResponse.ok) throw new Error('Failed to fetch subcategories');
         const subData: Category[] = await subResponse.json();
         
@@ -72,7 +72,7 @@ export default function CategoryEditPage({ params: paramsPromise }: { params: Pr
   const handleUpload = async (file: File): Promise<string> => {
     const formData = new FormData();
     formData.append('file', file);
-    const response = await fetch('http://localhost:4000/images/upload', {
+    const response = await fetch('https://store-backend-tb6b.onrender.com/images/upload', {
       method: 'POST',
       body: formData,
     });
@@ -135,7 +135,7 @@ export default function CategoryEditPage({ params: paramsPromise }: { params: Pr
         description: values.description,
         imageUrl: values.imageUrl || null,
       };
-      const response = await fetch(`http://localhost:4000/categories/${params.id}`, {
+      const response = await fetch(`https://store-backend-tb6b.onrender.com/categories/${params.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -162,7 +162,7 @@ export default function CategoryEditPage({ params: paramsPromise }: { params: Pr
         imageUrl: values.imageUrl || null,
         parentId: params.id,
       };
-      const response = await fetch(`http://localhost:4000/categories/${subId}`, {
+      const response = await fetch(`https://store-backend-tb6b.onrender.com/categories/${subId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -189,7 +189,7 @@ export default function CategoryEditPage({ params: paramsPromise }: { params: Pr
 
   const deleteSubcategory = async (subId: string) => {
     try {
-      const response = await fetch(`http://localhost:4000/categories/${subId}`, {
+      const response = await fetch(`https://store-backend-tb6b.onrender.com/categories/${subId}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete subcategory');

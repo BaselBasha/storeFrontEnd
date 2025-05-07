@@ -37,7 +37,7 @@ const UserGrowth: React.FC = () => {
     const fetchUserGrowth = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('http://localhost:4000/users/user-growth'); // Adjust URL to your backend endpoint
+        const response = await fetch('https://store-backend-tb6b.onrender.com/users/user-growth'); // Adjust URL to your backend endpoint
         const data: UserGrowthData = await response.json();
         
         setChartData(data);

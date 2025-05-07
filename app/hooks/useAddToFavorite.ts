@@ -23,7 +23,7 @@ export const useFavorites = () => {
   const fetchFavorites = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await axios.get<Product[]>('http://localhost:4000/favorites', { withCredentials: true });
+      const res = await axios.get<Product[]>('https://store-backend-tb6b.onrender.com/favorites', { withCredentials: true });
       setProducts(res.data);
       setFavorites(new Set(res.data.map((item) => item.id)));
     } catch (err) {
@@ -38,7 +38,7 @@ export const useFavorites = () => {
     async (productId: string, product?: Product) => {
       try {
         if (favorites.has(productId)) {
-          await axios.delete(`http://localhost:4000/favorites/${productId}`, { withCredentials: true });
+          await axios.delete(`https://store-backend-tb6b.onrender.com/favorites/${productId}`, { withCredentials: true });
           setFavorites((prev) => {
             const newSet = new Set(prev);
             newSet.delete(productId);
@@ -47,7 +47,7 @@ export const useFavorites = () => {
           setProducts((prev) => prev.filter((p) => p.id !== productId));
           message.success('Removed from favorites');
         } else {
-          await axios.post('http://localhost:4000/favorites', { productId }, { withCredentials: true });
+          await axios.post('https://store-backend-tb6b.onrender.com/favorites', { productId }, { withCredentials: true });
           setFavorites((prev) => {
             const newSet = new Set(prev);
             newSet.add(productId);

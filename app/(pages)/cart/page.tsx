@@ -55,7 +55,7 @@ const Cart = () => {
   useEffect(() => {
     const fetchCartItems = async () => {
       try {
-        const res = await axiosWithAuth.get("http://localhost:4000/cart");
+        const res = await axiosWithAuth.get("https://store-backend-tb6b.onrender.com/cart");
         const items: CartItem[] = Array.isArray(res.data.items)
           ? res.data.items.filter((item: any) => item.product && typeof item.product === "object")
           : [];
@@ -74,7 +74,7 @@ const Cart = () => {
 
   const updateQuantity = async (productId: string, quantity: number) => {
     try {
-      await axiosWithAuth.post("http://localhost:4000/cart/update-quantity", {
+      await axiosWithAuth.post("https://store-backend-tb6b.onrender.com/cart/update-quantity", {
         productId,
         quantity,
       });

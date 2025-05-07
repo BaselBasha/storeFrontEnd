@@ -2,7 +2,7 @@
 import axios from 'axios'
 
 const axiosWithAuth = axios.create({
-  baseURL: 'http://localhost:4000',
+  baseURL: 'https://store-backend-tb6b.onrender.com',
 })
 
 axiosWithAuth.interceptors.request.use(

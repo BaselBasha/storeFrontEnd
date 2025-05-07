@@ -66,7 +66,7 @@ export default function AdminProfile() {
           throw new Error('No user ID found in token');
         }
 
-        const response = await fetch(`http://localhost:4000/users/id/${userId}`, {
+        const response = await fetch(`https://store-backend-tb6b.onrender.com/users/id/${userId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -109,7 +109,7 @@ export default function AdminProfile() {
       // Store the intended action in sessionStorage
       sessionStorage.setItem('pendingAction', modalAction || '');
 
-      const response = await fetch(`http://localhost:4000/users/request-identity-confirmation`, {
+      const response = await fetch(`https://store-backend-tb6b.onrender.com/users/request-identity-confirmation`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

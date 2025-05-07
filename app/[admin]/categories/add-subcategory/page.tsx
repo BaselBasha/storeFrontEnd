@@ -37,7 +37,7 @@ export default function AddSubCategory() {
   useEffect(() => {
     const fetchMainCategories = async () => {
       try {
-        const response: AxiosResponse<MainCategory[]> = await axios.get('http://localhost:4000/categories');
+        const response: AxiosResponse<MainCategory[]> = await axios.get('https://store-backend-tb6b.onrender.com/categories');
         const data: MainCategory[] = response.data;
 
         // Filter for main categories (parentId: null)
@@ -66,7 +66,7 @@ export default function AddSubCategory() {
 
       try {
         const uploadResponse: AxiosResponse<ImageUploadResponse> = await axios.post(
-          'http://localhost:4000/images/upload',
+          'https://store-backend-tb6b.onrender.com/images/upload',
           formData,
           {
             headers: {
@@ -96,7 +96,7 @@ export default function AddSubCategory() {
     };
 
     try {
-      await axios.post('http://localhost:4000/categories', subCategoryData, {
+      await axios.post('https://store-backend-tb6b.onrender.com/categories', subCategoryData, {
         headers: {
           'Content-Type': 'application/json',
         },

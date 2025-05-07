@@ -22,9 +22,9 @@ export const useProduct = (id: string) => {
     const fetchData = async () => {
       try {
         const [productRes, relatedRes, suggestedRes] = await Promise.all([
-          axios.get(`http://localhost:4000/products/${id}`),
-          axios.get(`http://localhost:4000/products/${id}/related`),
-          axios.get(`http://localhost:4000/products/random/recommendations`),
+          axios.get(`https://store-backend-tb6b.onrender.com/products/${id}`),
+          axios.get(`https://store-backend-tb6b.onrender.com/products/${id}/related`),
+          axios.get(`https://store-backend-tb6b.onrender.com/products/random/recommendations`),
         ])
 
         setProduct(productRes.data)

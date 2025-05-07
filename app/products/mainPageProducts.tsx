@@ -51,7 +51,7 @@ const MainPageProducts = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`http://localhost:4000/categories/subcategories`);
+        const res = await axios.get(`https://store-backend-tb6b.onrender.com/categories/subcategories`);
         setData(res.data);
       } catch (error) {
         console.error('Failed to fetch subcategories:', error);

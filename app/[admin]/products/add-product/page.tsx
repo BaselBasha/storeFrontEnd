@@ -51,7 +51,7 @@ export default function AddProduct() {
 
     const fetchCategories = async () => {
       try {
-        const response: AxiosResponse<RawCategory[]> = await axios.get('http://localhost:4000/categories');
+        const response: AxiosResponse<RawCategory[]> = await axios.get('https://store-backend-tb6b.onrender.com/categories');
         const data: RawCategory[] = response.data;
 
         const categoryMap = new Map<string, Category>();
@@ -135,7 +135,7 @@ export default function AddProduct() {
       formData.append('file', imageFile);
 
       const uploadResponse: AxiosResponse<ImageUploadResponse> = await axios.post(
-        'http://localhost:4000/images/upload',
+        'https://store-backend-tb6b.onrender.com/images/upload',
         formData,
         {
           headers: {
@@ -164,7 +164,7 @@ export default function AddProduct() {
       };
 
       // Step 3: Submit product data to backend
-      await axios.post('http://localhost:4000/products', productData, {
+      await axios.post('https://store-backend-tb6b.onrender.com/products', productData, {
         headers: {
           'Content-Type': 'application/json',
         },

@@ -57,11 +57,11 @@ function AllProducts() {
 
     const fetchData = async () => {
       try {
-        const productsResponse = await fetch('http://localhost:4000/products');
+        const productsResponse = await fetch('https://store-backend-tb6b.onrender.com/products');
         if (!productsResponse.ok) throw new Error('Failed to fetch products');
         const productsData: Product[] = await productsResponse.json();
 
-        const categoriesResponse = await fetch('http://localhost:4000/categories');
+        const categoriesResponse = await fetch('https://store-backend-tb6b.onrender.com/categories');
         if (!categoriesResponse.ok) throw new Error('Failed to fetch categories');
         const categoriesData: Category[] = await categoriesResponse.json();
 

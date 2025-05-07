@@ -50,7 +50,7 @@ export default function CategoryList() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const { data } = await axios.get<Category[]>('http://localhost:4000/categories');
+        const { data } = await axios.get<Category[]>('https://store-backend-tb6b.onrender.com/categories');
         const mains = data.filter((cat) => !cat.parentId);
         const subs = data.filter((cat) => !!cat.parentId);
         setCategories(data);
@@ -87,7 +87,7 @@ export default function CategoryList() {
 
   const handleDelete = async (id: string) => {
     try {
-      await axios.delete(`http://localhost:4000/categories/${id}`);
+      await axios.delete(`https://store-backend-tb6b.onrender.com/categories/${id}`);
       const updated = categories.filter((cat) => cat.id !== id);
       const updatedMain = updated.filter((cat) => !cat.parentId);
       const updatedSub = updated.filter((cat) => !!cat.parentId);

@@ -28,7 +28,7 @@ export default function ProductList() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch('http://localhost:4000/products');
+        const response = await fetch('https://store-backend-tb6b.onrender.com/products');
         if (!response.ok) throw new Error('Failed to fetch products');
         const data: Product[] = await response.json();
         setProducts(data);
@@ -56,7 +56,7 @@ export default function ProductList() {
 
   const handleDelete = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:4000/products/${id}`, {
+      const response = await fetch(`https://store-backend-tb6b.onrender.com/products/${id}`, {
         method: 'DELETE',
       });
 

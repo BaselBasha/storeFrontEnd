@@ -71,7 +71,7 @@ const AdminOrders: React.FC = () => {
     setIsMounted(true);
     const fetchOrders = async () => {
       try {
-        const response = await axios.get("http://localhost:4000/orders"); // Adjust URL if needed
+        const response = await axios.get("https://store-backend-tb6b.onrender.com/orders"); // Adjust URL if needed
         setOrders(response.data);
         setLoading(false);
       } catch (err) {
@@ -99,7 +99,7 @@ const AdminOrders: React.FC = () => {
     }
 
     try {
-      const response = await axios.put(`http://localhost:4000/orders/${orderId}`, {
+      const response = await axios.put(`https://store-backend-tb6b.onrender.com/orders/${orderId}`, {
         status: newStatus,
       });
       setOrders((prevOrders) =>
@@ -133,7 +133,7 @@ const AdminOrders: React.FC = () => {
           type="error"
           showIcon
           action={
-            <a href="http://localhost:4000/orders" target="_blank" rel="noopener noreferrer">
+            <a href="https://store-backend-tb6b.onrender.com/orders" target="_blank" rel="noopener noreferrer">
               Test Endpoint
             </a>
           }

@@ -79,7 +79,7 @@ const Pcs: React.FC = () => {
 
     try {
       if (favorites.has(productId)) {
-        await axios.delete(`http://localhost:4000/favorites/${productId}`, {
+        await axios.delete(`https://store-backend-tb6b.onrender.com/favorites/${productId}`, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
@@ -92,7 +92,7 @@ const Pcs: React.FC = () => {
         message.success("Removed from favorites");
       } else {
         await axios.post(
-          `http://localhost:4000/favorites`,
+          `https://store-backend-tb6b.onrender.com/favorites`,
           { productId },
           {
             headers: {
@@ -115,13 +115,13 @@ const Pcs: React.FC = () => {
     const fetchSubcategoriesAndProducts = async () => {
       try {
         const subcategoriesResponse = await axios.get<SubcategorySummary[]>(
-          "http://localhost:4000/categories/67f6d1e6c0dec2f87edd1ad8/subcategories"
+          "https://store-backend-tb6b.onrender.com/categories/67f6d1e6c0dec2f87edd1ad8/subcategories"
         );
 
         const subcategoriesWithProducts = await Promise.all(
           subcategoriesResponse.data.map(async (subcat) => {
             const productsResponse = await axios.get<Subcategory>(
-              `http://localhost:4000/categories/id/${subcat.id}`
+              `https://store-backend-tb6b.onrender.com/categories/id/${subcat.id}`
             );
             return productsResponse.data;
           })
@@ -141,7 +141,7 @@ const Pcs: React.FC = () => {
 
       try {
         const accessToken = localStorage.getItem("accessToken");
-        const res = await axios.get<Product[]>("http://localhost:4000/favorites", {
+        const res = await axios.get<Product[]>("https://store-backend-tb6b.onrender.com/favorites", {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },

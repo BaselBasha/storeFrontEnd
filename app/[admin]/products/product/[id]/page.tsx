@@ -41,7 +41,7 @@ export default function ProductPage({ params: paramsPromise }: { params: Promise
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const response = await fetch(`http://localhost:4000/products/${params.id}`);
+        const response = await fetch(`https://store-backend-tb6b.onrender.com/products/${params.id}`);
         if (!response.ok) throw new Error('Failed to fetch product');
         const data: Product = await response.json();
         setProduct(data);
@@ -88,7 +88,7 @@ export default function ProductPage({ params: paramsPromise }: { params: Promise
     }
   
     try {
-      const response = await fetch('http://localhost:4000/images/upload', {
+      const response = await fetch('https://store-backend-tb6b.onrender.com/images/upload', {
         method: 'POST',
         body: formData,
       });
@@ -135,7 +135,7 @@ export default function ProductPage({ params: paramsPromise }: { params: Promise
         categoryId: product?.categoryId,
       };
 
-      const response = await fetch(`http://localhost:4000/products/${params.id}`, {
+      const response = await fetch(`https://store-backend-tb6b.onrender.com/products/${params.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -153,7 +153,7 @@ export default function ProductPage({ params: paramsPromise }: { params: Promise
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(`http://localhost:4000/products/${params.id}`, {
+      const response = await fetch(`https://store-backend-tb6b.onrender.com/products/${params.id}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete product');

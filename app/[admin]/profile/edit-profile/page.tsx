@@ -62,7 +62,7 @@ const EditProfile = () => {
           throw new Error('No user ID found in token');
         }
 
-        const response = await fetch(`http://localhost:4000/users/id/${userId}`, {
+        const response = await fetch(`https://store-backend-tb6b.onrender.com/users/id/${userId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -92,7 +92,7 @@ const EditProfile = () => {
         throw new Error('No access token found');
       }
 
-      const response = await fetch(`http://localhost:4000/users/check-${field}/${value}`, {
+      const response = await fetch(`https://store-backend-tb6b.onrender.com/users/check-${field}/${value}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -141,7 +141,7 @@ const EditProfile = () => {
       }
 
       const updatedData = { [field]: editValue };
-      const response = await fetch(`http://localhost:4000/users/updateUser`, {
+      const response = await fetch(`https://store-backend-tb6b.onrender.com/users/updateUser`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

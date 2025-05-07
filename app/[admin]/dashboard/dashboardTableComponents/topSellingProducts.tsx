@@ -20,7 +20,7 @@ export const TopSellingProducts = () => {
   useEffect(() => {
     const fetchTopSellingProducts = async () => {
       try {
-        const response = await axios.get<Product[]>('http://localhost:4000/products/top-selling');
+        const response = await axios.get<Product[]>('https://store-backend-tb6b.onrender.com/products/top-selling');
         setProducts(response.data);
         setLoading(false);
       } catch (err) {

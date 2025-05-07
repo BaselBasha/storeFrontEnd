@@ -53,7 +53,7 @@ function AllCategories() {
 
     const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:4000/categories');
+        const response = await fetch('https://store-backend-tb6b.onrender.com/categories');
         if (!response.ok) throw new Error('Failed to fetch categories');
         const data: Category[] = await response.json();
 

@@ -33,7 +33,7 @@ export default function AddCategory() {
       formData.append('file', imageFile);
 
       try {
-        const uploadResponse = await fetch('http://localhost:4000/images/upload', {
+        const uploadResponse = await fetch('https://store-backend-tb6b.onrender.com/images/upload', {
           method: 'POST',
           body: formData,
         });
@@ -65,7 +65,7 @@ export default function AddCategory() {
     };
 
     try {
-      const response = await fetch('http://localhost:4000/categories', {
+      const response = await fetch('https://store-backend-tb6b.onrender.com/categories', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

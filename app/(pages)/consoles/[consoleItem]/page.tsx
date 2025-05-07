@@ -92,7 +92,7 @@ const ConsoleItem: React.FC = () => {
 
     try {
       if (favorites.has(productId)) {
-        await axios.delete(`http://localhost:4000/favorites/${productId}`, {
+        await axios.delete(`https://store-backend-tb6b.onrender.com/favorites/${productId}`, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
@@ -105,7 +105,7 @@ const ConsoleItem: React.FC = () => {
         message.success('Removed from favorites');
       } else {
         await axios.post(
-          `http://localhost:4000/favorites`,
+          `https://store-backend-tb6b.onrender.com/favorites`,
           { productId },
           {
             headers: {
@@ -142,7 +142,7 @@ const ConsoleItem: React.FC = () => {
       setLoading(true);
       try {
         const response = await axios.get<{ products: Product[] }>(
-          `http://localhost:4000/categories/id/${categoryId}`
+          `https://store-backend-tb6b.onrender.com/categories/id/${categoryId}`
         );
         const items = response.data.products || [];
         setProducts(items);
@@ -160,7 +160,7 @@ const ConsoleItem: React.FC = () => {
       try {
         const accessToken = localStorage.getItem('accessToken');
         const res = await axios.get<Product[]>(
-          'http://localhost:4000/favorites',
+          'https://store-backend-tb6b.onrender.com/favorites',
           {
             headers: {
               Authorization: `Bearer ${accessToken}`,
